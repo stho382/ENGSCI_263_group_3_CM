@@ -81,7 +81,6 @@ def ode_pressure_model(t, P, P0, ap, bp, cp, q, dqdt):
 		dqdt : 
 			rate of change of source/ sink rate
 
-
 		Returns:
 		--------
 		dPdt : float
@@ -199,7 +198,7 @@ def improved_euler_step(f, tk, yk, h, pars):
 		yk1 : float
 			Solution at end of the Euler step.
 	"""
-	
+
 	f0 = f(tk ,yk ,*pars)								# finding predictor
 	f1 = f((h + tk), (yk + f0 * h), *pars)				# finding corrector
 	yk2 = yk + h * (f0 / 2 + f1 / 2)					# finding solution
