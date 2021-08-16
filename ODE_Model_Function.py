@@ -7,6 +7,8 @@ from glob import glob
 import os
 from scipy.optimize import curve_fit
 
+
+
 def load_ODE_Model_data():
     ''' Returns data from data file for Project 3.
 
@@ -17,6 +19,7 @@ def load_ODE_Model_data():
 		Returns:
 		--------
 
+        WaterLevel, Yearp, Prodq1, Yearq1, Prodq2, Yearq2, Temp, YearT 
 		WaterLevel : array-like
 			Vector of water-level for the Whakarewarewa Geothermal Field.
 		Yearp : array-like
@@ -57,6 +60,8 @@ def load_ODE_Model_data():
             YearT = Data[:,0]
 
     return WaterLevel, Yearp, Prodq1, Yearq1, Prodq2, Yearq2, Temp, YearT 
+
+WaterLevel, Yearp, Prodq1, Yearq1, Prodq2, Yearq2, Temp, YearT = load_ODE_Model_data()
     
 def ode_pressure_model(t, P, P0, ap, bp, cp, q, dqdt): 
 	''' 
@@ -171,7 +176,7 @@ def solve_pressure_ode(f, t0, t1, dt, x0, pars):
 	xs = 0.*ts							# array to store solution
 	xs[0] = x0							# set initial value
 	
-	# loop that iterates improved euler'smethod
+	# loop that iterates improved euler's method
 	for i in range(nt):
 		xs[i + 1] = improved_euler_step(f, ts[i], xs[i], dt, pars)
 	
@@ -210,8 +215,11 @@ def solve_temperature_ode(f, t0, t1, dt, x0, pars):
 	xs = 0.*ts							# array to store solution
 	xs[0] = x0							# set initial value
 	
+	prod = interpolate_production_values(ts)
+
 	# loop that iterates improved euler'smethod
 	for i in range(nt):
+		pars[0] = prod[i]
 		xs[i + 1] = improved_euler_step(f, ts[i], xs[i], dt, pars)
 	
 	return ts, xs
@@ -273,7 +281,7 @@ def interpolate_pressure_values(pv, tv, t):
 	p = np.interp(t, tv, pv)
 	return p
 
-def interpolate_production_values(prod1, prod2, t1, t2, t):
+def interpolate_production_values(t, prod1 = Prodq1, t1 = Yearq1, prod2 = Prodq2, t2 = Yearq2):
 	''' Return heat source parameter p for geothermal field.
 
 		Parameters:
@@ -294,6 +302,7 @@ def interpolate_production_values(prod1, prod2, t1, t2, t):
 		prod : array-like
 			Production values interpolated at t.
 	'''
+
 	p1 = np.interp(t, t1, prod1)
 	p2 = np.interp(t, t2, prod2)
 	prod = p1 + p2
@@ -302,3 +311,32 @@ def interpolate_production_values(prod1, prod2, t1, t2, t):
 
 #WaterLevel, Yearp, Prodq1, Yearq1, Prodq2, Yearq2, Temp, YearT = load_ODE_Model_data()
 t = np.linspace(1950,2014,262)
+
+def plot_model():
+    ''' Plot the LPM over top of the data.
+
+        Parameters:
+        -----------
+        none
+
+        Returns:
+        --------
+        none
+
+        Notes:
+        ------
+        This function called within if __name__ == "__main__":
+
+
+    '''
+    
+    t,x = solve_pressure_ode(ode_pressure_model, 1984.75, 2010, 0.25, -0.20629999999999882, [0.00052, 0.00065, 22])
+    ax1.plot(t, x, 'b-', label='model')
+    ax1.plot(t1, x1, 'r-', label='model1')
+
+
+    plt.show()
+
+
+
+
