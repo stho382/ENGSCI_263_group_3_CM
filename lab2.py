@@ -1,14 +1,4 @@
-# ENGSCI263: Lab Exercise 2
-# lab2.py
-
-# PURPOSE:
-# IMPLEMENT a lumped parameter model and CALIBRATE it to data.
-
-# PREPARATION:
-# Review the lumped parameter model notes and use provided data from the kettle experiment.
-
-# SUBMISSION:
-# - Show your calibrated LPM to the instructor (in Week 3).
+# Use this as a guide
 
 # imports
 import numpy as np
@@ -124,7 +114,6 @@ def plot_benchmark():
 
     """
 
-    
     t0 = 0
     t1 = 10
     dt = 0.1
