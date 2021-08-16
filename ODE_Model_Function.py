@@ -63,7 +63,7 @@ def load_ODE_Model_data():
 
 WaterLevel, Yearp, Prodq1, Yearq1, Prodq2, Yearq2, Temp, YearT = load_ODE_Model_data()
     
-def ode_pressure_model(t, P, P0, ap, bp, cp, q, dqdt): 
+def ode_pressure_model(t, q, P, P0, ap, bp, cp, dqdt): 
 	''' 
 		Return the derivative dP/dt at time, t, for given parameters.
 
@@ -71,6 +71,8 @@ def ode_pressure_model(t, P, P0, ap, bp, cp, q, dqdt):
 		-----------
 		t : float
 			independent variable
+		q : float
+			Source/sink rate.
 		P : float
 			dependent variable.
 		P0 : float
@@ -81,8 +83,6 @@ def ode_pressure_model(t, P, P0, ap, bp, cp, q, dqdt):
 			Recharge strength parameter.
 		cp : float
 			Slow strength parameter.
-		q : float
-			Source/sink rate.
 		dqdt : 
 			rate of change of source/ sink rate
 
