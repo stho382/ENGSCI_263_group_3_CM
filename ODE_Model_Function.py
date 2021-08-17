@@ -41,15 +41,15 @@ def load_ODE_Model_data():
 
     # loop to extract all the data from the files
     for file in files:
-        if file == "data\\gr_p.txt":
+        if file == "data" + os.sep + "gr_p.txt":
             Data = np.genfromtxt(file, delimiter=",", skip_header=1)
             WaterLevel = Data[:, 1]
             Yearp = Data[:, 0]
-        if file == "data\\gr_q1.txt":
+        if file == "data" + os.sep + "gr_q1.txt":
             Data = np.genfromtxt(file, delimiter=",", skip_header=1)
             Prodq1 = Data[:, 1]
             Yearq1 = Data[:, 0]
-        if file == "data\\gr_q2.txt":
+        if file == "data" + os.sep + "gr_q2.txt":
             Data = np.genfromtxt(file, delimiter=",", skip_header=1)
             Prodq2 = Data[:, 1]
             Yearq2 = Data[:, 0]
@@ -62,9 +62,10 @@ def load_ODE_Model_data():
 
 
 WaterLevel, Yearp, Prodq1, Yearq1, Prodq2, Yearq2, Temp, YearT = load_ODE_Model_data()
+Pressure = (WaterLevel - 296.85) / 10
 
 
-def ode_pressure_model(t, P, P0, ap, bp, cp, q, dqdt):
+def ode_pressure_model(t, P, q, dqdt, P0, ap, bp, cp):
     """
     Return the derivative dP/dt at time, t, for given parameters.
 
@@ -72,6 +73,8 @@ def ode_pressure_model(t, P, P0, ap, bp, cp, q, dqdt):
     -----------
     t : float
             independent variable
+    q : float
+            Source/sink rate.
     P : float
             dependent variable.
     P0 : float
@@ -82,8 +85,6 @@ def ode_pressure_model(t, P, P0, ap, bp, cp, q, dqdt):
             Recharge strength parameter.
     cp : float
             Slow strength parameter.
-    q : float
-            Source/sink rate.
     dqdt :
             rate of change of source/ sink rate
 
@@ -179,8 +180,14 @@ def solve_pressure_ode(f, t0, t1, dt, x0, pars):
     xs = 0.0 * ts  # array to store solution
     xs[0] = x0  # set initial value
 
-    # loop that iterates improved euler's method
+    prod = interpolate_production_values(ts)
+
+    dqdt = find_dqdt(prod, dt)
+
+    # loop that iterates improved euler'smethod
     for i in range(nt):
+        pars[0] = prod[i]
+        pars[1] = dqdt[i]
         xs[i + 1] = improved_euler_step(f, ts[i], xs[i], dt, pars)
 
     return ts, xs
@@ -218,11 +225,8 @@ def solve_temperature_ode(f, t0, t1, dt, x0, pars):
     xs = 0.0 * ts  # array to store solution
     xs[0] = x0  # set initial value
 
-    prod = interpolate_production_values(ts)
-
     # loop that iterates improved euler'smethod
     for i in range(nt):
-        pars[0] = prod[i]
         xs[i + 1] = improved_euler_step(f, ts[i], xs[i], dt, pars)
 
     return ts, xs
@@ -255,6 +259,108 @@ def improved_euler_step(f, tk, yk, h, pars):
     yk2 = yk + h * (f0 / 2 + f1 / 2)  # finding solution
 
     return yk2
+
+
+def fitting_pressure_model(f, x0, y0):
+    a = 1
+    return None
+
+
+def improved_euler_step(f, tk, yk, h, pars):
+    """Compute a single Improved Euler step.
+
+    Parameters
+    ----------
+    f : callable
+            Derivative function.
+    tk : float
+            Independent variable at beginning of step.
+    yk : float
+            Solution at beginning of step.
+    h : float
+            Step size.
+    pars : iterable
+            Optional parameters to pass to derivative function.
+
+    Returns
+    -------
+    yk1 : float
+            Solution at end of the Euler step.
+    """
+
+    f0 = f(tk, yk, *pars)  # finding predictor
+    f1 = f((h + tk), (yk + f0 * h), *pars)  # finding corrector
+    yk2 = yk + h * (f0 / 2 + f1 / 2)  # finding solution
+
+    return yk2
+
+
+def interpolate_pressure_values(pv, tv, t):
+    """Return heat source parameter p for geothermal field.
+
+    Parameters:
+    -----------
+    pv : array-like
+            vector of pressure values
+    tv : array-like
+            vector of time values
+    t : array-like
+            Vector of times at which to interpolate the pressure.
+
+    Returns:
+    --------
+    p : array-like
+            Pressure values interpolated at t.
+    """
+    p = np.interp(t, tv, pv)
+    return p
+
+
+def find_dqdt(q, h):
+
+    dqdt = 0.0 * q
+
+    for i in range(len(q)):
+        if i == 0:
+            dqdt[i] = (q[i + 1] - q[i]) / h
+        if i == (len(q) - 1):
+            dqdt[i] = (q[i] - q[i - 1]) / h
+        if (i > 0) and (i < (len(q) - 1)):
+            dqdt[i] = (q[i + 1] - q[i - 1]) / (2 * h)
+
+    return dqdt
+
+
+def interpolate_production_values(t, prod1=Prodq1, t1=Yearq1, prod2=Prodq2, t2=Yearq2):
+    """Return heat source parameter p for geothermal field.
+
+    Parameters:
+    -----------
+    prod1 : array-like
+            vector of pressure values, for bore hole 2
+    prod2 : array-like
+            vector of production values, for bore hole 2
+    t1 : array-like
+            vector of time values, for bore hole 1
+    t2 : array-like
+            vector of time values, for bore hole 2
+    t : array-like
+            Vector of times at which to interpolate the pressure.
+
+    Returns:
+    --------
+    prod : array-like
+            Production values interpolated at t.
+    """
+
+    p1 = np.interp(t, t1, prod1)
+    p2 = np.interp(t, t2, prod2)
+    prod = p1 + p2
+    return prod
+
+
+# WaterLevel, Yearp, Prodq1, Yearq1, Prodq2, Yearq2, Temp, YearT = load_ODE_Model_data()
+# t = np.linspace(1950,2014,262)
 
 
 def fitting_pressure_model(f, x0, y0):
@@ -318,6 +424,14 @@ def interpolate_production_values(t, prod1=Prodq1, t1=Yearq1, prod2=Prodq2, t2=Y
 
 # WaterLevel, Yearp, Prodq1, Yearq1, Prodq2, Yearq2, Temp, YearT = load_ODE_Model_data()
 t = np.linspace(1950, 2014, 262)
+
+
+if __name__ == "__main__":
+    # plot_model()
+    p, _ = curve_fit(ode_pressure_model, Pressure, Yearp)
+    fig, ax = plt.subplots(1, 1)
+    YY = ode_pressure_model(Yearp, *p)
+    ax.plot(Yearp, YY, "r-", label="best-fit")
 
 
 def plot_model():
