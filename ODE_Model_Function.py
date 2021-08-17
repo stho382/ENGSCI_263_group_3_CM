@@ -42,15 +42,15 @@ def load_ODE_Model_data():
     
     # loop to extract all the data from the files
     for file in files:
-        if file == 'data\\gr_p.txt':
+        if file == 'data' + os.sep + 'gr_p.txt':
             Data = np.genfromtxt(file, delimiter =",",skip_header=1)
             WaterLevel = Data[:,1]
             Yearp = Data[:,0]
-        if file == 'data\\gr_q1.txt':
+        if file == 'data' + os.sep + 'gr_q1.txt':
             Data = np.genfromtxt(file, delimiter =",",skip_header=1)
             Prodq1 = Data[:,1]
             Yearq1 = Data[:,0]
-        if file == 'data\\gr_q2.txt':
+        if file == 'data' + os.sep + 'gr_q2.txt':
             Data = np.genfromtxt(file, delimiter =",",skip_header=1)
             Prodq2 = Data[:,1]
             Yearq2 = Data[:,0]
@@ -62,8 +62,9 @@ def load_ODE_Model_data():
     return WaterLevel, Yearp, Prodq1, Yearq1, Prodq2, Yearq2, Temp, YearT 
 
 WaterLevel, Yearp, Prodq1, Yearq1, Prodq2, Yearq2, Temp, YearT = load_ODE_Model_data()
+Pressure = (WaterLevel-296.85)/10
     
-def ode_pressure_model(t, q, P, P0, ap, bp, cp, dqdt): 
+def ode_pressure_model(t, P, q, dqdt, P0, ap, bp, cp): 
 	''' 
 		Return the derivative dP/dt at time, t, for given parameters.
 
@@ -176,8 +177,14 @@ def solve_pressure_ode(f, t0, t1, dt, x0, pars):
 	xs = 0.*ts							# array to store solution
 	xs[0] = x0							# set initial value
 	
-	# loop that iterates improved euler's method
+	prod = interpolate_production_values(ts)
+
+	dqdt = find_dqdt(prod, dt)
+
+	# loop that iterates improved euler'smethod
 	for i in range(nt):
+		pars[0] = prod[i]
+		pars[1] = dqdt[i]
 		xs[i + 1] = improved_euler_step(f, ts[i], xs[i], dt, pars)
 	
 	return ts, xs
@@ -214,12 +221,9 @@ def solve_temperature_ode(f, t0, t1, dt, x0, pars):
 	ts = t0+np.arange(nt+1)*dt			# x array
 	xs = 0.*ts							# array to store solution
 	xs[0] = x0							# set initial value
-	
-	prod = interpolate_production_values(ts)
 
 	# loop that iterates improved euler'smethod
 	for i in range(nt):
-		pars[0] = prod[i]
 		xs[i + 1] = improved_euler_step(f, ts[i], xs[i], dt, pars)
 	
 	return ts, xs
@@ -281,6 +285,21 @@ def interpolate_pressure_values(pv, tv, t):
 	p = np.interp(t, tv, pv)
 	return p
 
+def find_dqdt(q, h):
+	
+	dqdt = 0.*q
+
+	for i in range(len(q)):
+		if i == 0:
+			dqdt[i] = (q[i+1]-q[i])/h
+		if i == (len(q)-1):
+			dqdt[i] = (q[i]-q[i-1])/h
+		if (i > 0) and (i < (len(q)-1)):
+			dqdt[i] = (q[i+1]-q[i-1])/(2*h)
+
+	return dqdt
+
+
 def interpolate_production_values(t, prod1 = Prodq1, t1 = Yearq1, prod2 = Prodq2, t2 = Yearq2):
 	''' Return heat source parameter p for geothermal field.
 
@@ -310,7 +329,7 @@ def interpolate_production_values(t, prod1 = Prodq1, t1 = Yearq1, prod2 = Prodq2
 
 
 #WaterLevel, Yearp, Prodq1, Yearq1, Prodq2, Yearq2, Temp, YearT = load_ODE_Model_data()
-t = np.linspace(1950,2014,262)
+#t = np.linspace(1950,2014,262)
 
 def plot_model():
     ''' Plot the LPM over top of the data.
@@ -330,13 +349,22 @@ def plot_model():
 
     '''
     
-    t,x = solve_pressure_ode(ode_pressure_model, 1984.75, 2010, 0.25, -0.20629999999999882, [0.00052, 0.00065, 22])
+    fx,ax1 = plt.subplots(nrows=1,ncols=1)   
+
+    t,x = solve_pressure_ode(ode_pressure_model, 1984.75, 2010, 0.25, -0.20629999999999882, [0, 0, 78.22296651522319, -31.83314260538466, 8.110039012063625, 12.925226297782988])
+    t2,x2 = solve_pressure_ode(ode_pressure_model, 1984.75, 2010, 0.25, -0.20629999999999882, [0, 0, 2, 1, 1, 1])
     ax1.plot(t, x, 'b-', label='model')
-    ax1.plot(t1, x1, 'r-', label='model1')
+    ax1.plot(t2, x2, 'r-', label='model_2')
+
 
 
     plt.show()
 
-
+if __name__ == "__main__":
+    #plot_model()
+	p,_ = curve_fit(ode_pressure_model, Pressure, Yearp)
+	fig,ax = plt.subplots(1,1)
+	YY = ode_pressure_model(Yearp, *p)
+	ax.plot(Yearp, YY, 'r-', label='best-fit')
 
 
