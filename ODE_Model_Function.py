@@ -61,6 +61,8 @@ def load_ODE_Model_data():
 
     return WaterLevel, Yearp, Prodq1, Yearq1, Prodq2, Yearq2, Temp, YearT 
 
+### MAKE SURE TO MOVE TO THE MAIN PY FUNCTION RATHER THAN KEEPING HERE
+# These take the data we have and set to global variables
 WaterLevel, Yearp, Prodq1, Yearq1, Prodq2, Yearq2, Temp, YearT = load_ODE_Model_data()
 Pressure = (WaterLevel-296.85)/10
     
@@ -325,7 +327,12 @@ def interpolate_production_values(t, prod1 = Prodq1, t1 = Yearq1, prod2 = Prodq2
 	p1 = np.interp(t, t1, prod1)
 	p2 = np.interp(t, t2, prod2)
 	prod = p1 + p2
-	return prod
+	return p2
+
+def fit_pressure_model(t, P0, ap, bp, cp):
+	t,p = solve_pressure_ode(ode_pressure_model, t[0], t[-1], 0.25, -0.20629999999999882, pars = [0, 0, P0, ap, bp, cp])
+
+	return p
 
 
 #WaterLevel, Yearp, Prodq1, Yearq1, Prodq2, Yearq2, Temp, YearT = load_ODE_Model_data()
@@ -362,9 +369,24 @@ def plot_model():
 
 if __name__ == "__main__":
     #plot_model()
-	p,_ = curve_fit(ode_pressure_model, Pressure, Yearp)
+	t = np.arange(Yearp[0],(Yearp[-1]+0.25),0.25)
+	press = np.interp(t, Yearp, Pressure)
 	fig,ax = plt.subplots(1,1)
-	YY = ode_pressure_model(Yearp, *p)
-	ax.plot(Yearp, YY, 'r-', label='best-fit')
+	sigma = [0.25]*len(press)
+	p,cov = curve_fit(fit_pressure_model, Yearp, press, sigma = sigma)
+	t2,x2 = solve_pressure_ode(ode_pressure_model, t[0], t[-1], 0.25, -0.20629999999999882, pars = [0, 0, p[0], p[1], p[2], p[3]])
+	ax.plot(t2, x2, 'r-')
+
+	ps = np.random.multivariate_normal(p, cov, 100)
+	for pi in ps:
+		t3,x3 = solve_pressure_ode(ode_pressure_model, t[0], t[-1], 0.25, -0.20629999999999882, pars = [0, 0, pi[0], pi[1], pi[2], pi[3]])
+		ax.plot(t3, x3, 'k-', alpha=0.2, lw=0.5)
+
+	ax.plot(Yearp, Pressure, 'ko')
+
+
+
+	plt.show()
+
 
 
