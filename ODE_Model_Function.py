@@ -319,7 +319,6 @@ def interpolate_pressure_values(pv, tv, t):
 
 
 def find_dqdt(q, h):
-<<<<<<< HEAD
 	
 	dqdt = 0.*q
 
@@ -369,20 +368,7 @@ def fit_pressure_model(t, P0, ap, bp, cp):
 
 #WaterLevel, Yearp, Prodq1, Yearq1, Prodq2, Yearq2, Temp, YearT = load_ODE_Model_data()
 #t = np.linspace(1950,2014,262)
-=======
->>>>>>> 5dd7a936e3462b15e550106aa7c977fc5599d748
 
-    dqdt = 0.0 * q
-
-    for i in range(len(q)):
-        if i == 0:
-            dqdt[i] = (q[i + 1] - q[i]) / h
-        if i == (len(q) - 1):
-            dqdt[i] = (q[i] - q[i - 1]) / h
-        if (i > 0) and (i < (len(q) - 1)):
-            dqdt[i] = (q[i + 1] - q[i - 1]) / (2 * h)
-
-    return dqdt
 
 
 def interpolate_production_values(t, prod1=Prodq1, t1=Yearq1, prod2=Prodq2, t2=Yearq2):
@@ -481,7 +467,6 @@ t = np.linspace(1950, 2014, 262)
 
 
 if __name__ == "__main__":
-<<<<<<< HEAD
     #plot_model()
 	t = np.arange(Yearp[0],(Yearp[-1]+0.25),0.25)
 	press = np.interp(t, Yearp, Pressure)
@@ -502,13 +487,6 @@ if __name__ == "__main__":
 
 	plt.show()
 
-=======
-    # plot_model()
-    p, _ = curve_fit(ode_pressure_model, Pressure, Yearp)
-    fig, ax = plt.subplots(1, 1)
-    YY = ode_pressure_model(Yearp, *p)
-    ax.plot(Yearp, YY, "r-", label="best-fit")
->>>>>>> 5dd7a936e3462b15e550106aa7c977fc5599d748
 
 
 def plot_model():
