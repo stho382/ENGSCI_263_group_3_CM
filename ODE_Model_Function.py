@@ -159,6 +159,7 @@ def solve_pressure_ode(
     x0,
     pars,
     future_prediction=False,
+    benchmark=False,
 ):
     """Solve an ODE numerically.
 
@@ -193,22 +194,24 @@ def solve_pressure_ode(
     xs = 0.0 * ts  # array to store solution
     xs[0] = x0  # set initial value
 
-    # if not doing future predictions
-    if future_prediction == False:
-        # get interpolated production values
-        prod = interpolate_production_values(ts)
-        # calculate dqdt at each point
-        dqdt = find_dqdt(prod, dt)
+    if not benchmark:
+        # if not doing future predictions
+        if future_prediction == False:
+            # get interpolated production values
+            prod = interpolate_production_values(ts)
+            # calculate dqdt at each point
+            dqdt = find_dqdt(prod, dt)
 
-    # if doing future predictions, set constant production (therefore dqdt = 0)
-    if future_prediction != False:
-        prod = [future_prediction] * len(ts)
-        dqdt = 0.0 * ts
+        # if doing future predictions, set constant production (therefore dqdt = 0)
+        if future_prediction != False:
+            prod = [future_prediction] * len(ts)
+            dqdt = 0.0 * ts
 
     # loop that iterates improved euler'smethod
     for i in range(nt):
-        pars[0] = prod[i]
-        pars[1] = dqdt[i]
+        if not benchmark:
+            pars[0] = prod[i]
+            pars[1] = dqdt[i]
         xs[i + 1] = improved_euler_step(f, ts[i], xs[i], dt, pars)
 
     return ts, xs

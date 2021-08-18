@@ -27,11 +27,11 @@ def plot_benchmark():
     # Pressure ODE
     t0 = 0
     t1 = 10
-    dt = 0.01
-    x0 = 0
-    P0 = 1
+    dt = 0.001
+    x0 = 3
+    P0 = 3
     ap = 1
-    bp = 1
+    bp = 0.5
     cp = 0
     q = 1
     dqdt = 0
@@ -39,7 +39,7 @@ def plot_benchmark():
     # solve numerically
     pars = [q, dqdt, P0, ap, bp, cp]
 
-    t, P = solve_pressure_ode(ode_pressure_model, t0, t1, dt, x0, pars)
+    t, P = solve_pressure_ode(ode_pressure_model, t0, t1, dt, x0, pars, benchmark=True)
     t2 = np.zeros(len(t))
     P2 = np.zeros(len(t))
     t2[0] = t0
@@ -70,10 +70,15 @@ def plot_benchmark():
 
     t = np.delete(t, 0)
 
+    # We need to store these for when we do the temperature ode convergence analysis
+    Pressure_conv = []
     conv = []
     for j in dt_conv:
-        t3, x3 = solve_pressure_ode(ode_pressure_model, t0, t1, j, x0, pars)
+        t3, x3 = solve_pressure_ode(
+            ode_pressure_model, t0, t1, j, x0, pars, benchmark=True
+        )
         conv.append(x3[-1])
+        Pressure_conv.append(x3)
 
     f, (ax1, ax2, ax3) = plt.subplots(nrows=1, ncols=3)
 
@@ -93,18 +98,18 @@ def plot_benchmark():
 
     t0 = 0
     t1 = 10
-    x0 = 10
+    x0 = 5
 
-    T0 = 10
+    T0 = 5
     ap = 1
     bp = 1
     cp = 0
     at = 1
     bt = 0
-    Tc = 1
+    Tc = 3
     q = 1
     dqdt = 0
-    Tt = 1
+    Tt = 3
     T = 0
 
     # solve numerically
@@ -142,9 +147,12 @@ def plot_benchmark():
     t = np.delete(t, 0)
 
     conv = []
-    for j in dt_conv:
+    for j in range(len(dt_conv)):
 
-        t3, x3 = solve_temperature_ode(ode_temperature_model, t0, t1, j, x0, pars)
+        pars[-2] = Pressure_conv[j]
+        t3, x3 = solve_temperature_ode(
+            ode_temperature_model, t0, t1, dt_conv[j], x0, pars
+        )
         conv.append(x3[-1])
 
     f, (ax1, ax2, ax3) = plt.subplots(nrows=1, ncols=3)
