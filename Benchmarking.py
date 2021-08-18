@@ -31,13 +31,13 @@ def plot_benchmark():
     ap = 1
     bp = 1
     cp = 0
-    q = 0
+    q = 100
     dqdt = 0
 
     # solve numerically
     pars = [P0, ap, bp, cp, q, dqdt]
 
-    t, P = solve_ode(ode_pressure_model, t0, t1, dt, x0, pars)
+    t, P = solve_pressure_ode(ode_pressure_model, t0, t1, dt, x0, pars)
     t2 = np.zeros(len(t))
     P2 = np.zeros(len(t))
     t2[0] = t0
@@ -48,31 +48,35 @@ def plot_benchmark():
     # analytic solution
     for i in range(len(t2) - 1):
         t2[i + 1] = t[i] + dt
-        P2[i + 1] = pressure_analytic(t[i + 1], P=0, *pars)
+        P2[i + 1] = pressure_analytic(t[i + 1], 0, *pars)
 
         # measure relative error
         error[i + 1] = (P2[i + 1] - P[i + 1]) / P2[i + 1]
 
-    # convert to log scale
-    error = [math.log10(i) for i in error]
+    # convert to log scale currently broken
+    # error = [math.log10(i) for i in error]
+
+    # initial and analytic start at the same value so useless to compare them
+    error = np.delete(error, 0)
+
     # Convergence analysis
 
     # set range of step sizes
     inv_dt = list(range(10, 30, 1))
     dt_conv = [10 / i for i in inv_dt]
     inv_dt = [i / 10 for i in inv_dt]
-    error = np.delete(error, 0)
+
     t = np.delete(t, 0)
 
     conv = []
     for j in dt_conv:
-        t3, x3 = solve_ode(ode_pressure_model, t0, t1, j, x0, pars)
+        t3, x3 = solve_pressure_ode(ode_pressure_model, t0, t1, j, x0, pars)
         conv.append(x3[-1])
 
     f, (ax1, ax2, ax3) = plt.subplots(nrows=1, ncols=3)
 
-    ax1.plot(t2, x2, "r-", label="analytic")
-    ax1.plot(t2, x, "bx-", label="numerical")
+    ax1.plot(t2, P2, "r-", label="analytic")
+    ax1.plot(t2, P, "bx-", label="numerical")
 
     ax2.plot(t, error, "g-")
 
@@ -84,3 +88,6 @@ def plot_benchmark():
         plt.show()
     else:
         plt.savefig("lab2_plot.png", dpi=300)
+
+
+plot_benchmark()
