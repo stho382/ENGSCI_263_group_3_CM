@@ -89,6 +89,19 @@ def plot_benchmark():
 
     ax3.plot(inv_dt, conv, "k*")
 
+    ax1.legend()
+
+    ax1.set_title("Analytic vs Numerical solution")
+    ax1.set_xlabel("Time")
+    ax1.set_ylabel("Pressure")
+
+    ax2.set_title("Relative Error, (analytic - numerical) / analytic")
+    ax2.set_xlabel("Time")
+    ax2.set_ylabel("Error")
+
+    ax3.set_title("Convergence testing")
+    ax3.set_xlabel("1/step size")
+    ax3.set_ylabel("Final value")
     # EITHER show the plot to the screen OR save a version of it to the disk
     save_figure = False
     if not save_figure:
@@ -164,6 +177,19 @@ def plot_benchmark():
 
     ax3.plot(inv_dt, conv, "k*")
 
+    ax1.legend()
+
+    ax1.set_title("Analytic vs Numerical solution")
+    ax1.set_xlabel("Time")
+    ax1.set_ylabel("Temperature")
+
+    ax2.set_title("Relative Error, (analytic - numerical) / analytic")
+    ax2.set_xlabel("Time")
+    ax2.set_ylabel("Error")
+
+    ax3.set_title("Convergence testing")
+    ax3.set_xlabel("1/step size")
+    ax3.set_ylabel("Final value")
     # EITHER show the plot to the screen OR save a version of it to the disk
     save_figure = False
     if not save_figure:
