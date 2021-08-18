@@ -1,7 +1,7 @@
 import numpy as np
 
 # Pressure
-def pressure_analytic(t, P, P0, ap, bp, cp, q, dqdt):
+def pressure_analytic(t, P, q, dqdt, P0, ap, bp, cp):
     # returns analytic solution P for a constant production rate q
 
     return -ap * q / bp * (1 - np.exp(-bp * t)) + P0
