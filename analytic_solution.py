@@ -11,4 +11,4 @@ def pressure_analytic(t, P, q, dqdt, P0, ap, bp, cp):
 def temperature_analytic(t, T, Tt, Tc, T0, at, bt, ap, bp, P, P0, q):
     # returns analytic solution for temperature ODE with constant q and negligible conduction
 
-    return Tc + (T0 - Tc) * np.exp(-at * q / ap * (np.exp(-bp * t) + bp * t))
+    return Tc + (T0 - Tc) * np.exp((-at * q / ap * (np.exp(-bp * t) + bp * t - 1)))

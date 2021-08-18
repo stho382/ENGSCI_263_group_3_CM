@@ -145,9 +145,9 @@ def ode_temperature_model(t, T, Tt, Tc, T0, at, bt, ap, bp, P, P0):
     """
 
     if P > P0:
-        dTdt = at * (bp / ap) * (P - P0) * (Tt - T0) - bt * (T - T0)
+        dTdt = -at * (bp / ap) * (P - P0) * (Tt - T) - bt * (T - T0)
     else:
-        dTdt = at * (bp / ap) * (P - P0) * (Tc - T0) - bt * (T - T0)
+        dTdt = -at * (bp / ap) * (P - P0) * (Tc - T) - bt * (T - T0)
     return dTdt
 
 

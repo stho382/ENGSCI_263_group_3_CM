@@ -27,13 +27,13 @@ def plot_benchmark():
     # Pressure ODE
     t0 = 0
     t1 = 10
-    dt = 0.1
+    dt = 0.01
     x0 = 0
     P0 = 1
     ap = 1
     bp = 1
     cp = 0
-    q = 100
+    q = 1
     dqdt = 0
 
     # solve numerically
@@ -93,17 +93,16 @@ def plot_benchmark():
 
     t0 = 0
     t1 = 10
-    dt = 0.1
-    x0 = 0
+    x0 = 10
 
-    T0 = 0
+    T0 = 10
     ap = 1
     bp = 1
     cp = 0
     at = 1
-    bt = 1
+    bt = 0
     Tc = 1
-    q = 100
+    q = 1
     dqdt = 0
     Tt = 1
     T = 0
@@ -125,7 +124,7 @@ def plot_benchmark():
         T2[i + 1] = temperature_analytic(t[i + 1], 0, *pars, q)
 
         # measure relative error
-        error[i + 1] = (P2[i + 1] - P[i + 1]) / P2[i + 1]
+        error[i + 1] = (T2[i + 1] - T[i + 1]) / T2[i + 1]
 
     # convert to log scale currently broken
     # error = [math.log10(i) for i in error]
