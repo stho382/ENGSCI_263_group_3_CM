@@ -99,6 +99,7 @@ def ode_pressure_model(t, P, q, dqdt, P0, ap, bp, cp):
     ------
     None
     """
+    # Formula
     dPdt = -ap * q - bp * (P - P0) - cp * dqdt
 
     return dPdt
@@ -150,7 +151,15 @@ def ode_temperature_model(t, T, Tt, Tc, T0, at, bt, ap, bp, P, P0):
     return dTdt
 
 
-def solve_pressure_ode(f, t0, t1, dt, x0, pars):
+def solve_pressure_ode(
+    f,
+    t0,
+    t1,
+    dt,
+    x0,
+    pars,
+    future_prediction=False,
+):
     """Solve an ODE numerically.
 
     Parameters:
@@ -165,6 +174,8 @@ def solve_pressure_ode(f, t0, t1, dt, x0, pars):
             Time step length.
     x0 : float
             Initial value of solution.
+        future_prediction : False or value
+                        False if not being used for a future prediction, otherwise contains value of future predicted production rate
     pars : array-like
             List of parameters passed to ODE function f.
 
@@ -182,9 +193,17 @@ def solve_pressure_ode(f, t0, t1, dt, x0, pars):
     xs = 0.0 * ts  # array to store solution
     xs[0] = x0  # set initial value
 
-    prod = interpolate_production_values(ts)
+    # if not doing future predictions
+    if future_prediction == False:
+        # get interpolated production values
+        prod = interpolate_production_values(ts)
+        # calculate dqdt at each point
+        dqdt = find_dqdt(prod, dt)
 
-    dqdt = find_dqdt(prod, dt)
+    # if doing future predictions, set constant production (therefore dqdt = 0)
+    if future_prediction != False:
+        prod = [future_prediction] * len(ts)
+        dqdt = 0.0 * ts
 
     # loop that iterates improved euler'smethod
     for i in range(nt):
@@ -340,34 +359,6 @@ def find_dqdt(q, h):
     return dqdt
 
 
-def interpolate_production_values(t, prod1=Prodq1, t1=Yearq1, prod2=Prodq2, t2=Yearq2):
-    """Return heat source parameter p for geothermal field.
-
-    Parameters:
-    -----------
-    prod1 : array-like
-            vector of pressure values, for bore hole 2
-    prod2 : array-like
-            vector of production values, for bore hole 2
-    t1 : array-like
-            vector of time values, for bore hole 1
-    t2 : array-like
-            vector of time values, for bore hole 2
-    t : array-like
-            Vector of times at which to interpolate the pressure.
-
-    Returns:
-    --------
-    prod : array-like
-            Production values interpolated at t.
-    """
-
-    p1 = np.interp(t, t1, prod1)
-    p2 = np.interp(t, t2, prod2)
-    prod = p1 + p2
-    return p2
-
-
 def fit_pressure_model(t, P0, ap, bp, cp):
     t, p = solve_pressure_ode(
         ode_pressure_model,
@@ -379,38 +370,6 @@ def fit_pressure_model(t, P0, ap, bp, cp):
     )
 
     return p
-
-
-# WaterLevel, Yearp, Prodq1, Yearq1, Prodq2, Yearq2, Temp, YearT = load_ODE_Model_data()
-# t = np.linspace(1950,2014,262)
-
-
-def interpolate_production_values(t, prod1=Prodq1, t1=Yearq1, prod2=Prodq2, t2=Yearq2):
-    """Return heat source parameter p for geothermal field.
-
-    Parameters:
-    -----------
-    prod1 : array-like
-            vector of pressure values, for bore hole 2
-    prod2 : array-like
-            vector of production values, for bore hole 2
-    t1 : array-like
-            vector of time values, for bore hole 1
-    t2 : array-like
-            vector of time values, for bore hole 2
-    t : array-like
-            Vector of times at which to interpolate the pressure.
-
-    Returns:
-    --------
-    prod : array-like
-            Production values interpolated at t.
-    """
-
-    p1 = np.interp(t, t1, prod1)
-    p2 = np.interp(t, t2, prod2)
-    prod = p1 + p2
-    return prod
 
 
 # WaterLevel, Yearp, Prodq1, Yearq1, Prodq2, Yearq2, Temp, YearT = load_ODE_Model_data()
@@ -473,7 +432,7 @@ def interpolate_production_values(t, prod1=Prodq1, t1=Yearq1, prod2=Prodq2, t2=Y
     p1 = np.interp(t, t1, prod1)
     p2 = np.interp(t, t2, prod2)
     prod = p1 + p2
-    return prod
+    return p2
 
 
 # WaterLevel, Yearp, Prodq1, Yearq1, Prodq2, Yearq2, Temp, YearT = load_ODE_Model_data()
@@ -481,13 +440,12 @@ t = np.linspace(1950, 2014, 262)
 
 
 if __name__ == "__main__":
-    # plot_model()
     t = np.arange(Yearp[0], (Yearp[-1] + 0.25), 0.25)
     press = np.interp(t, Yearp, Pressure)
     fig, ax = plt.subplots(1, 1)
-    sigma = [0.25] * len(press)
+    sigma = [0.2] * len(press)
     p, cov = curve_fit(fit_pressure_model, Yearp, press, sigma=sigma)
-    t2, x2 = solve_pressure_ode(
+    t1, x1 = solve_pressure_ode(
         ode_pressure_model,
         t[0],
         t[-1],
@@ -495,11 +453,49 @@ if __name__ == "__main__":
         -0.20629999999999882,
         pars=[0, 0, p[0], p[1], p[2], p[3]],
     )
-    ax.plot(t2, x2, "r-")
+    t2, x2 = solve_pressure_ode(
+        ode_pressure_model,
+        t0=t[-1],
+        t1=2050,
+        dt=0.25,
+        x0=x1[-1],
+        pars=[0, 0, p[0], p[1], p[2], p[3]],
+        future_prediction=10000,
+    )
+    t3, x3 = solve_pressure_ode(
+        ode_pressure_model,
+        t0=t[-1],
+        t1=2050,
+        dt=0.25,
+        x0=x1[-1],
+        pars=[0, 0, p[0], p[1], p[2], p[3]],
+        future_prediction=0,
+    )
+    t4, x4 = solve_pressure_ode(
+        ode_pressure_model,
+        t0=t[-1],
+        t1=2050,
+        dt=0.25,
+        x0=x1[-1],
+        pars=[0, 0, p[0], p[1], p[2], p[3]],
+        future_prediction=20000,
+    )
+    ax.plot(t1, x1, "r-", label="test")
+    (line1,) = ax.plot(t2, x2, "r-", label="test1")
+    (line2,) = ax.plot(t3, x3, "b-", label="test2")
+    (line3,) = ax.plot(t4, x4, "g-", label="test3")
+    ax.legend(
+        handles=[line1, line2, line3],
+        labels=[
+            "Current Production",
+            "Cease all production",
+            "Double current production",
+        ],
+    )
 
     ps = np.random.multivariate_normal(p, cov, 100)
     for pi in ps:
-        t3, x3 = solve_pressure_ode(
+        tp1, xp1 = solve_pressure_ode(
             ode_pressure_model,
             t[0],
             t[-1],
@@ -507,7 +503,37 @@ if __name__ == "__main__":
             -0.20629999999999882,
             pars=[0, 0, pi[0], pi[1], pi[2], pi[3]],
         )
-        ax.plot(t3, x3, "k-", alpha=0.2, lw=0.5)
+        tp2, xp2 = solve_pressure_ode(
+            ode_pressure_model,
+            t0=tp1[-1],
+            t1=2050,
+            dt=0.25,
+            x0=xp1[-1],
+            pars=[0, 0, pi[0], pi[1], pi[2], pi[3]],
+            future_prediction=10000,
+        )
+        tp3, xp3 = solve_pressure_ode(
+            ode_pressure_model,
+            t0=tp1[-1],
+            t1=2050,
+            dt=0.25,
+            x0=xp1[-1],
+            pars=[0, 0, pi[0], pi[1], pi[2], pi[3]],
+            future_prediction=0,
+        )
+        tp4, xp4 = solve_pressure_ode(
+            ode_pressure_model,
+            t0=tp1[-1],
+            t1=2050,
+            dt=0.25,
+            x0=xp1[-1],
+            pars=[0, 0, pi[0], pi[1], pi[2], pi[3]],
+            future_prediction=20000,
+        )
+        ax.plot(tp1, xp1, "k-", alpha=0.2, lw=0.5)
+        ax.plot(tp2, xp2, "r-", alpha=0.2, lw=0.5)
+        ax.plot(tp3, xp3, "b-", alpha=0.2, lw=0.5)
+        ax.plot(tp4, xp4, "g-", alpha=0.2, lw=0.5)
 
     ax.plot(Yearp, Pressure, "ko")
 
