@@ -27,7 +27,7 @@ def plot_benchmark():
     # Pressure ODE
     t0 = 0
     t1 = 10
-    dt = 0.001
+    dt = 0.1
     x0 = 3
     P0 = 3
     ap = 1
@@ -107,7 +107,11 @@ def plot_benchmark():
     if not save_figure:
         plt.show()
     else:
-        plt.savefig("lab2_plot.png", dpi=300)
+        plt.savefig("Pressure benchmark.png", dpi=300)
+
+    # Temperature ODE
+    # The analytic solution takes q as an input but the numerical solution takes Pressure
+    # This means we need pressure values for given q from the pressure ODE first
 
     t0 = 0
     t1 = 10
@@ -115,7 +119,7 @@ def plot_benchmark():
 
     T0 = 5
     ap = 1
-    bp = 1
+    bp = 0.5
     cp = 0
     at = 1
     bt = 0
@@ -136,7 +140,7 @@ def plot_benchmark():
 
     error = np.zeros(len(t))
 
-    # analytic solution
+    # analytic solution. note that P in pars is from the numerical solution for pressure
     for i in range(len(t2) - 1):
         t2[i + 1] = t[i] + dt
         T2[i + 1] = temperature_analytic(t[i + 1], 0, *pars, q)
@@ -195,7 +199,7 @@ def plot_benchmark():
     if not save_figure:
         plt.show()
     else:
-        plt.savefig("lab2_plot.png", dpi=300)
+        plt.savefig("Temperature benchmark.png", dpi=300)
 
 
 plot_benchmark()
