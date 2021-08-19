@@ -45,11 +45,11 @@ def load_ODE_Model_data():
             Data = np.genfromtxt(file, delimiter=",", skip_header=1)
             WaterLevel = Data[:, 1]
             Yearp = Data[:, 0]
-        if file == "data" + os.sep + "gr_q1.txt":
+        elif file == "data" + os.sep + "gr_q1.txt":
             Data = np.genfromtxt(file, delimiter=",", skip_header=1)
             Prodq1 = Data[:, 1]
             Yearq1 = Data[:, 0]
-        if file == "data" + os.sep + "gr_q2.txt":
+        elif file == "data" + os.sep + "gr_q2.txt":
             Data = np.genfromtxt(file, delimiter=",", skip_header=1)
             Prodq2 = Data[:, 1]
             Yearq2 = Data[:, 0]
@@ -67,7 +67,6 @@ def load_ODE_Model_data():
 # Do we delete this, not sure if it is the only place where we load in the data?
 WaterLevel, Yearp, Prodq1, Yearq1, Prodq2, Yearq2, Temp, YearT = load_ODE_Model_data()
 Pressure = (WaterLevel - 296.85) / 10
-
 
 def ode_pressure_model(t, P, q, dqdt, P0, ap, bp, cp):
     """
