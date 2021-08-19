@@ -63,6 +63,8 @@ def load_ODE_Model_data():
 
 ### MAKE SURE TO MOVE TO THE MAIN PY FUNCTION RATHER THAN KEEPING HERE
 # These take the data we have and set to global variables
+
+# Do we delete this, not sure if it is the only place where we load in the data?
 WaterLevel, Yearp, Prodq1, Yearq1, Prodq2, Yearq2, Temp, YearT = load_ODE_Model_data()
 Pressure = (WaterLevel - 296.85) / 10
 
@@ -151,16 +153,7 @@ def ode_temperature_model(t, T, Tt, Tc, T0, at, bt, ap, bp, P, P0):
     return dTdt
 
 
-def solve_pressure_ode(
-    f,
-    t0,
-    t1,
-    dt,
-    x0,
-    pars,
-    future_prediction=False,
-    benchmark=False,
-):
+def solve_pressure_ode(f, t0, t1, dt, x0, pars, future_prediction=False, benchmark=False,):
     """Solve an ODE numerically.
 
     Parameters:
@@ -292,61 +285,6 @@ def improved_euler_step(f, tk, yk, h, pars):
     return yk2
 
 
-def fitting_pressure_model(f, x0, y0):
-    a = 1
-    return None
-
-
-def improved_euler_step(f, tk, yk, h, pars):
-    """Compute a single Improved Euler step.
-
-    Parameters
-    ----------
-    f : callable
-            Derivative function.
-    tk : float
-            Independent variable at beginning of step.
-    yk : float
-            Solution at beginning of step.
-    h : float
-            Step size.
-    pars : iterable
-            Optional parameters to pass to derivative function.
-
-    Returns
-    -------
-    yk1 : float
-            Solution at end of the Euler step.
-    """
-
-    f0 = f(tk, yk, *pars)  # finding predictor
-    f1 = f((h + tk), (yk + f0 * h), *pars)  # finding corrector
-    yk2 = yk + h * (f0 / 2 + f1 / 2)  # finding solution
-
-    return yk2
-
-
-def interpolate_pressure_values(pv, tv, t):
-    """Return heat source parameter p for geothermal field.
-
-    Parameters:
-    -----------
-    pv : array-like
-            vector of pressure values
-    tv : array-like
-            vector of time values
-    t : array-like
-            Vector of times at which to interpolate the pressure.
-
-    Returns:
-    --------
-    p : array-like
-            Pressure values interpolated at t.
-    """
-    p = np.interp(t, tv, pv)
-    return p
-
-
 def find_dqdt(q, h):
 
     dqdt = 0.0 * q
@@ -373,20 +311,6 @@ def fit_pressure_model(t, P0, ap, bp, cp):
     )
 
     return p
-
-
-# WaterLevel, Yearp, Prodq1, Yearq1, Prodq2, Yearq2, Temp, YearT = load_ODE_Model_data()
-# t = np.linspace(1950,2014,262)
-
-
-def fitting_pressure_model(f, x0, y0):
-    a = 1
-    return None
-
-
-def fitting_temperature_model():
-    a = 1
-    return None
 
 
 def interpolate_pressure_values(pv, tv, t):
@@ -436,10 +360,6 @@ def interpolate_production_values(t, prod1=Prodq1, t1=Yearq1, prod2=Prodq2, t2=Y
     p2 = np.interp(t, t2, prod2)
     prod = p1 + p2
     return p2
-
-
-# WaterLevel, Yearp, Prodq1, Yearq1, Prodq2, Yearq2, Temp, YearT = load_ODE_Model_data()
-t = np.linspace(1950, 2014, 262)
 
 
 if __name__ == "__main__":
