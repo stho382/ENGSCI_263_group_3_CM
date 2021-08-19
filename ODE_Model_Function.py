@@ -45,11 +45,11 @@ def load_ODE_Model_data():
             Data = np.genfromtxt(file, delimiter=",", skip_header=1)
             WaterLevel = Data[:, 1]
             Yearp = Data[:, 0]
-        if file == "data" + os.sep + "gr_q1.txt":
+        elif file == "data" + os.sep + "gr_q1.txt":
             Data = np.genfromtxt(file, delimiter=",", skip_header=1)
             Prodq1 = Data[:, 1]
             Yearq1 = Data[:, 0]
-        if file == "data" + os.sep + "gr_q2.txt":
+        elif file == "data" + os.sep + "gr_q2.txt":
             Data = np.genfromtxt(file, delimiter=",", skip_header=1)
             Prodq2 = Data[:, 1]
             Yearq2 = Data[:, 0]
@@ -105,7 +105,7 @@ def ode_pressure_model(t, P, q, dqdt, P0, ap, bp, cp):
     return dPdt
 
 
-def ode_temperature_model(t, T, Tt, Tc, T0, at, bt, ap, bp, P, P0):
+def ode_temperature_model(t, T, Tc, T0, at, bt, ap, bp, P, P0):
     """
     Return the derivative dT/dt at time, t, for given parameters.
 
@@ -143,6 +143,8 @@ def ode_temperature_model(t, T, Tt, Tc, T0, at, bt, ap, bp, P, P0):
     ------
     None
     """
+    #think this is valid?
+    Tt = T
 
     if P > P0:
         dTdt = -at * (bp / ap) * (P - P0) * (Tt - T) - bt * (T - T0)
@@ -158,9 +160,8 @@ def solve_pressure_ode(
     dt,
     x0,
     pars,
-    future_prediction=False,
-    benchmark=False,
-):
+    future_prediction='False',
+    benchmark=False):
     """Solve an ODE numerically.
 
     Parameters:
@@ -196,14 +197,14 @@ def solve_pressure_ode(
 
     if not benchmark:
         # if not doing future predictions
-        if future_prediction == False:
+        if future_prediction == 'False':
             # get interpolated production values
             prod = interpolate_production_values(ts)
             # calculate dqdt at each point
             dqdt = find_dqdt(prod, dt)
 
         # if doing future predictions, set constant production (therefore dqdt = 0)
-        if future_prediction != False:
+        if future_prediction != 'False':
             prod = [future_prediction] * len(ts)
             dqdt = 0.0 * ts
 
@@ -217,7 +218,7 @@ def solve_pressure_ode(
     return ts, xs
 
 
-def solve_temperature_ode(f, t0, t1, dt, x0, pars):
+def solve_temperature_ode(f, t0, t1, dt, x0, pars, given_pressure_values = True):
     """Solve an ODE numerically.
 
     Parameters:
@@ -247,11 +248,14 @@ def solve_temperature_ode(f, t0, t1, dt, x0, pars):
     nt = int(np.ceil((t1 - t0) / dt))  # compute number of Euler steps to take
     ts = t0 + np.arange(nt + 1) * dt  # x array
     xs = 0.0 * ts  # array to store solution
-    xs[0] = x0  # set initial value
-
-    # Pressure is not constant over time so we need to pass in a list of values for it
-    # The ode temperature model only accepts single inputs for pressure
-    P = pars[-2]
+    xs[0] = x0  # set initial value 
+    
+    if given_pressure_values == True:
+        P = np.interp(ts, Yearp, Pressure)
+    if given_pressure_values == False:
+        # Pressure is not constant over time so we need to pass in a list of values for it
+        # The ode temperature model only accepts single inputs for pressure
+        P = pars[-2]
     parsi = pars.copy()
 
     # loop that iterates improved euler'smethod
@@ -290,11 +294,6 @@ def improved_euler_step(f, tk, yk, h, pars):
     yk2 = yk + h * (f0 / 2 + f1 / 2)  # finding solution
 
     return yk2
-
-
-def fitting_pressure_model(f, x0, y0):
-    a = 1
-    return None
 
 
 def improved_euler_step(f, tk, yk, h, pars):
@@ -351,6 +350,8 @@ def find_dqdt(q, h):
 
     dqdt = 0.0 * q
 
+    
+
     for i in range(len(q)):
         if i == 0:
             dqdt[i] = (q[i + 1] - q[i]) / h
@@ -363,16 +364,28 @@ def find_dqdt(q, h):
 
 
 def fit_pressure_model(t, P0, ap, bp, cp):
-    t, p = solve_pressure_ode(
+    (t,p) = solve_pressure_ode(
         ode_pressure_model,
         t[0],
         t[-1],
         0.25,
-        -0.20629999999999882,
+        Pressure[0],
         pars=[0, 0, P0, ap, bp, cp],
     )
 
     return p
+
+def fit_temperature_model(tT, T0, at, bt):
+    tT, pT = solve_temperature_ode(
+        ode_temperature_model,
+        tT[0],
+        tT[-1],
+        1,
+        Temp[0],
+        pars=[20, T0, at, bt, 3.120653006350713e-06, 0.11456452594196342e-05, 0, 0.29016966989598225],
+    )
+
+    return pT
 
 
 # WaterLevel, Yearp, Prodq1, Yearq1, Prodq2, Yearq2, Temp, YearT = load_ODE_Model_data()
@@ -443,17 +456,31 @@ t = np.linspace(1950, 2014, 262)
 
 
 if __name__ == "__main__":
-    t = np.arange(Yearp[0], (Yearp[-1] + 0.25), 0.25)
-    press = np.interp(t, Yearp, Pressure)
+    t = np.arange(Yearq2[0], (Yearq2[-1] + 0.25), 0.25)
+    t1 = np.arange(Yearp[0], (Yearp[-1] + 0.25), 0.25)
+    press = np.interp(t1, Yearp, Pressure)
     fig, ax = plt.subplots(1, 1)
     sigma = [0.2] * len(press)
-    p, cov = curve_fit(fit_pressure_model, Yearp, press, sigma=sigma)
-    t1, x1 = solve_pressure_ode(
+    #p, cov = curve_fit(fit_pressure_model, t1, press, sigma=sigma, p0 = [1, 4.9e-07, 1, 1])
+
+
+    TimeT = np.arange(YearT[0], (YearT[-1] + 0.25), 0.25)
+    t0, x0 = solve_pressure_ode(
         ode_pressure_model,
-        t[0],
+        1960,
         t[-1],
         0.25,
-        -0.20629999999999882,
+        -1.2,
+        pars=[0, 0, p[0], p[1], p[2], p[3]])
+
+    ax.plot(t0, x0, "k-", label="test")
+
+    t1, x1 = solve_pressure_ode(
+        ode_pressure_model,
+        t1[0],
+        t1[-1],
+        0.25,
+        Pressure[0],
         pars=[0, 0, p[0], p[1], p[2], p[3]],
     )
     t2, x2 = solve_pressure_ode(
@@ -484,7 +511,7 @@ if __name__ == "__main__":
         future_prediction=20000,
     )
     ax.plot(t1, x1, "r-", label="test")
-    (line1,) = ax.plot(t2, x2, "r-", label="test1")
+    '''(line1,) = ax.plot(t2, x2, "r-", label="test1")
     (line2,) = ax.plot(t3, x3, "b-", label="test2")
     (line3,) = ax.plot(t4, x4, "g-", label="test3")
     ax.legend(
@@ -536,12 +563,31 @@ if __name__ == "__main__":
         ax.plot(tp1, xp1, "k-", alpha=0.2, lw=0.5)
         ax.plot(tp2, xp2, "r-", alpha=0.2, lw=0.5)
         ax.plot(tp3, xp3, "b-", alpha=0.2, lw=0.5)
-        ax.plot(tp4, xp4, "g-", alpha=0.2, lw=0.5)
+        ax.plot(tp4, xp4, "g-", alpha=0.2, lw=0.5)'''
 
     ax.plot(Yearp, Pressure, "ko")
 
     plt.show()
 
+    tT = np.arange(YearT[0], (YearT[-1]+1), 1)
+    temperature = np.interp(tT, YearT, Temp)
+    sigmaT = [0.2] * len(temperature)
+    pT, covT = curve_fit(fit_temperature_model, tT, temperature, sigma=sigmaT)
+    figT, axT = plt.subplots(1, 1)
+
+    tT1, xT1 = solve_temperature_ode(
+        ode_temperature_model,
+        tT[0],
+        tT[-1],
+        1,
+        Temp[0],
+        pars=[20, pT[0], pT[1], pT[2], 3.120653006350713e-06, 0.11456452594196342e-05, 0, 0.29016966989598225]
+    )
+    axT.plot(tT1, xT1, "r-", label="test")
+    axT.plot(YearT, Temp, "ko")
+    #axT.plot(tT, temperature, "r-")
+
+    plt.show()
 
 def plot_model():
     """Plot the LPM over top of the data.
