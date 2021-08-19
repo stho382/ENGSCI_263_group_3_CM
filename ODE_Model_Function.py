@@ -63,9 +63,10 @@ def load_ODE_Model_data():
 
 ### MAKE SURE TO MOVE TO THE MAIN PY FUNCTION RATHER THAN KEEPING HERE
 # These take the data we have and set to global variables
+
+# Do we delete this, not sure if it is the only place where we load in the data?
 WaterLevel, Yearp, Prodq1, Yearq1, Prodq2, Yearq2, Temp, YearT = load_ODE_Model_data()
 Pressure = (WaterLevel - 296.85) / 10
-
 
 def ode_pressure_model(t, P, q, dqdt, P0, ap, bp, cp):
     """
@@ -153,6 +154,7 @@ def ode_temperature_model(t, T, Tc, T0, at, bt, ap, bp, P, P0):
     return dTdt
 
 
+<<<<<<< HEAD
 def solve_pressure_ode(
     f,
     t0,
@@ -162,6 +164,9 @@ def solve_pressure_ode(
     pars,
     future_prediction='False',
     benchmark=False):
+=======
+def solve_pressure_ode(f, t0, t1, dt, x0, pars, future_prediction=False, benchmark=False,):
+>>>>>>> 7904225b3ae53a9ef737b7e10f0ed3fe32dab83c
     """Solve an ODE numerically.
 
     Parameters:
@@ -388,20 +393,6 @@ def fit_temperature_model(tT, T0, at, bt):
     return pT
 
 
-# WaterLevel, Yearp, Prodq1, Yearq1, Prodq2, Yearq2, Temp, YearT = load_ODE_Model_data()
-# t = np.linspace(1950,2014,262)
-
-
-def fitting_pressure_model(f, x0, y0):
-    a = 1
-    return None
-
-
-def fitting_temperature_model():
-    a = 1
-    return None
-
-
 def interpolate_pressure_values(pv, tv, t):
     """Return heat source parameter p for geothermal field.
 
@@ -449,10 +440,6 @@ def interpolate_production_values(t, prod1=Prodq1, t1=Yearq1, prod2=Prodq2, t2=Y
     p2 = np.interp(t, t2, prod2)
     prod = p1 + p2
     return p2
-
-
-# WaterLevel, Yearp, Prodq1, Yearq1, Prodq2, Yearq2, Temp, YearT = load_ODE_Model_data()
-t = np.linspace(1950, 2014, 262)
 
 
 if __name__ == "__main__":
