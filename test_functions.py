@@ -4,8 +4,6 @@ import numpy as np
 from copy import copy
 from warnings import warn
 
-
-
 def test_solve_pressure_ode():
     """
 	Tests if function ode_pressure_model is working properly by comparing it with a known result.
@@ -31,8 +29,3 @@ def test_solve_temperature_ode():
 
     assert norm(dTdt1 - dtdt1) < 1.e-10
     assert norm(dTdt2 - dtdt2) < 1.e-10
-
-
-T1, dTdt1 = solve_temperature_ode(ode_temperature_model,0, 1, 0.5, 1, [0,0,1,2,3,4,5,7,6])
-a =1 
-
