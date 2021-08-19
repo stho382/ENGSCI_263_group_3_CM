@@ -66,7 +66,11 @@ def load_ODE_Model_data():
 
 # Do we delete this, not sure if it is the only place where we load in the data?
 WaterLevel, Yearp, Prodq1, Yearq1, Prodq2, Yearq2, Temp, YearT = load_ODE_Model_data()
-Pressure = (WaterLevel - 296.85) / 10
+#Pressure should be in Pa rather than MPa
+Pressure = (1+((WaterLevel - 296.85)))*1000000
+# Production should be per year rather than per day
+Prodq2 = Prodq2*365
+Prodq1 = Prodq1*365
 
 def ode_pressure_model(t, P, q, dqdt, P0, ap, bp, cp):
     """
@@ -76,10 +80,12 @@ def ode_pressure_model(t, P, q, dqdt, P0, ap, bp, cp):
     -----------
     t : float
             independent variable
-    q : float
-            Source/sink rate.
     P : float
             dependent variable.
+    q : float
+            Source/sink rate.
+    dqdt :
+            rate of change of source/ sink rate   
     P0 : float
             ambient value of dependent variable.
     ap : float
@@ -88,8 +94,7 @@ def ode_pressure_model(t, P, q, dqdt, P0, ap, bp, cp):
             Recharge strength parameter.
     cp : float
             Slow strength parameter.
-    dqdt :
-            rate of change of source/ sink rate
+
 
     Returns:
     --------
@@ -154,19 +159,8 @@ def ode_temperature_model(t, T, Tc, T0, at, bt, ap, bp, P, P0):
     return dTdt
 
 
-<<<<<<< HEAD
-def solve_pressure_ode(
-    f,
-    t0,
-    t1,
-    dt,
-    x0,
-    pars,
-    future_prediction='False',
-    benchmark=False):
-=======
-def solve_pressure_ode(f, t0, t1, dt, x0, pars, future_prediction=False, benchmark=False,):
->>>>>>> 7904225b3ae53a9ef737b7e10f0ed3fe32dab83c
+
+def solve_pressure_ode(f, t0, t1, dt, x0, pars, future_prediction='False', benchmark=False,):
     """Solve an ODE numerically.
 
     Parameters:
@@ -181,10 +175,13 @@ def solve_pressure_ode(f, t0, t1, dt, x0, pars, future_prediction=False, benchma
             Time step length.
     x0 : float
             Initial value of solution.
-        future_prediction : False or value
-                        False if not being used for a future prediction, otherwise contains value of future predicted production rate
     pars : array-like
-            List of parameters passed to ODE function f.
+            List of parameters passed to ODE function f. [q, dqdt, P0, ap, bp, cp]
+    future_prediction : False or value
+            False if not being used for a future prediction, otherwise contains value of future predicted production rate
+	benchmark : boolean
+			Tells if this is being used for a benchmark test
+
 
     Returns:
     --------
@@ -208,10 +205,25 @@ def solve_pressure_ode(f, t0, t1, dt, x0, pars, future_prediction=False, benchma
             # calculate dqdt at each point
             dqdt = find_dqdt(prod, dt)
 
-        # if doing future predictions, set constant production (therefore dqdt = 0)
+        # if doing future predictions, set production. 
+		# We know from previous data (with a 10000 tonne/day limit) that even with a constant overall production there
+		# is some dqdt over time, and this has a significant impact on the equation for pressure
+		# therefore we create a dqdt relative to the size of the q
         if future_prediction != 'False':
+            # production constant of future predicted valyes
             prod = [future_prediction] * len(ts)
-            dqdt = 0.0 * ts
+            #dqdt = [0] * len(ts)
+            
+			# dqdt seems to be about 1/300th of q if constant q
+            dqdt = [future_prediction/300] * len(ts)
+
+			# as overall q is not changing, dqdt should be negative as often as positive
+			# generate random binary array
+            arrays = np.random.randint(2, size=len(ts))
+            # look through array and make dqdt negative if 0, (therefore positive if 1)
+            for i in arrays:
+                if i == 0:
+                    dqdt[i] = -dqdt[i]
 
     # loop that iterates improved euler'smethod
     for i in range(nt):
@@ -223,7 +235,7 @@ def solve_pressure_ode(f, t0, t1, dt, x0, pars, future_prediction=False, benchma
     return ts, xs
 
 
-def solve_temperature_ode(f, t0, t1, dt, x0, pars, given_pressure_values = True):
+def solve_temperature_ode(f, t0, t1, dt, x0, pars):
     """Solve an ODE numerically.
 
     Parameters:
@@ -255,13 +267,13 @@ def solve_temperature_ode(f, t0, t1, dt, x0, pars, given_pressure_values = True)
     xs = 0.0 * ts  # array to store solution
     xs[0] = x0  # set initial value 
     
-    if given_pressure_values == True:
-        P = np.interp(ts, Yearp, Pressure)
-    if given_pressure_values == False:
-        # Pressure is not constant over time so we need to pass in a list of values for it
-        # The ode temperature model only accepts single inputs for pressure
-        P = pars[-2]
+
+    # Pressure is not constant over time so we need to pass in a list of values for it
+    # The ode temperature model only accepts single inputs for pressure
+    P = pars[-2]
     parsi = pars.copy()
+    # make sure parsi has no elements that are array  (will be reset but sometimes causes issues for some reasons)
+    parsi[-2] = P[0]
 
     # loop that iterates improved euler'smethod
     for i in range(nt):
@@ -270,35 +282,6 @@ def solve_temperature_ode(f, t0, t1, dt, x0, pars, given_pressure_values = True)
         xs[i + 1] = improved_euler_step(f, ts[i], xs[i], dt, parsi)
 
     return ts, xs
-
-
-def improved_euler_step(f, tk, yk, h, pars):
-    """Compute a single Improved Euler step.
-
-    Parameters
-    ----------
-    f : callable
-            Derivative function.
-    tk : float
-            Independent variable at beginning of step.
-    yk : float
-            Solution at beginning of step.
-    h : float
-            Step size.
-    pars : iterable
-            Optional parameters to pass to derivative function.
-
-    Returns
-    -------
-    yk1 : float
-            Solution at end of the Euler step.
-    """
-
-    f0 = f(tk, yk, *pars)  # finding predictor
-    f1 = f((h + tk), (yk + f0 * h), *pars)  # finding corrector
-    yk2 = yk + h * (f0 / 2 + f1 / 2)  # finding solution
-
-    return yk2
 
 
 def improved_euler_step(f, tk, yk, h, pars):
@@ -368,7 +351,10 @@ def find_dqdt(q, h):
     return dqdt
 
 
-def fit_pressure_model(t, P0, ap, bp, cp):
+def fit_pressure_model(t, ap, bp, cp):
+    # Given P0
+    P0 = 1.6e+06
+
     (t,p) = solve_pressure_ode(
         ode_pressure_model,
         t[0],
@@ -381,37 +367,46 @@ def fit_pressure_model(t, P0, ap, bp, cp):
     return p
 
 def fit_temperature_model(tT, T0, at, bt):
-    tT, pT = solve_temperature_ode(
+    #[Tc, T0, at, bt, ap, bp, P, P0] need to be parsed into ode_temperature model
+
+    # given P0
+    P0 = 1.6e+06
+    
+    # ap and bp from fit of pressure model
+    ap = 0.0015
+    bp = 0.035
+
+    #get pressure values by solving pressure ODE
+    (t, p) = solve_pressure_ode(
+        ode_pressure_model,
+        1960,
+        tT[-1],
+        0.25,
+        1349003,
+        pars=[0, 0, P0, 0.0015, 0.035, 0.6])
+    
+    #create pressure array for next step
+    pressure = [0] * int(np.ceil(len(t)/4))
+
+    #we need 1/4 as many pressure value as we generated because the step size for temp is 1,
+    #compared to 0.25 for pressure
+    #Loop through and take every 1 of 4 values
+    for i in range( int(np.ceil(len(t)/4) )):
+        time = t[i*4]
+        pressure[i] = p[i*4]
+    
+    # Solve temperature ode
+    (tT, pT) = solve_temperature_ode(
         ode_temperature_model,
-        tT[0],
+        1960,
         tT[-1],
         1,
         Temp[0],
-        pars=[20, T0, at, bt, 3.120653006350713e-06, 0.11456452594196342e-05, 0, 0.29016966989598225],
+        pars=[20, T0, at, bt, ap, bp, pressure, P0],
     )
 
     return pT
 
-
-def interpolate_pressure_values(pv, tv, t):
-    """Return heat source parameter p for geothermal field.
-
-    Parameters:
-    -----------
-    pv : array-like
-            vector of pressure values
-    tv : array-like
-            vector of time values
-    t : array-like
-            Vector of times at which to interpolate the pressure.
-
-    Returns:
-    --------
-    p : array-like
-            Pressure values interpolated at t.
-    """
-    p = np.interp(t, tv, pv)
-    return p
 
 
 def interpolate_production_values(t, prod1=Prodq1, t1=Yearq1, prod2=Prodq2, t2=Yearq2):
@@ -436,9 +431,10 @@ def interpolate_production_values(t, prod1=Prodq1, t1=Yearq1, prod2=Prodq2, t2=Y
             Production values interpolated at t.
     """
 
-    p1 = np.interp(t, t1, prod1)
+    #p1 = np.interp(t, t1, prod1)
+    # We decided as a group to use total q which is q2
     p2 = np.interp(t, t2, prod2)
-    prod = p1 + p2
+    #prod = p1 + p2
     return p2
 
 
