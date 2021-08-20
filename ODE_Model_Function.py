@@ -71,6 +71,8 @@ Pressure = (1+((WaterLevel - 296.85)))*1000000
 # Production should be per year rather than per day
 Prodq2 = Prodq2*365
 Prodq1 = Prodq1*365
+P0 = 1.6e+06
+TCguess = 20
 
 def ode_pressure_model(t, P, q, dqdt, P0, ap, bp, cp):
     """
@@ -352,12 +354,10 @@ def find_dqdt(q, h):
 
 
 def fit_pressure_model(t, ap, bp, cp):
-    # Given P0
-    P0 = 1.6e+06
 
     (t,p) = solve_pressure_ode(
         ode_pressure_model,
-        t[0],
+        t[1]-0.25,
         t[-1],
         0.25,
         Pressure[0],
@@ -437,9 +437,138 @@ def interpolate_production_values(t, prod1=Prodq1, t1=Yearq1, prod2=Prodq2, t2=Y
     #prod = p1 + p2
     return p2
 
+def plot_model(Future_Productions, Future_Time, Labels):
+    """Plot the model
+
+    Parameters:
+    -----------
+    Future_Productions : array-like
+        Array of future productions to be tested
+    Future_Time : int
+        Future year that you want to predict to
+    Labels : array-like
+        array of len(Future_Productions) that contains the labels of each line to be plotted
+        eg ["Current Production", "Cease all production", "Double current production"]
+
+    Returns:
+    --------
+    none
+
+    Notes:
+    ------
+    This function called within if __name__ == "__main__":
+
+    """
+    
+    #PLOTTING PRESSURE FIRST
+
+    #creates pressure array
+    tP = np.arange(Yearp[0], (Yearp[-1] + 0.25), 0.25)
+    #interp pressure values at time array points
+    press = np.interp(tP, Yearp, Pressure)
+    # create plot
+    figP, axP = plt.subplots(1, 1)
+    # not really sure what sigma value to use
+    sigma = [0.2] * len(press)
+
+    # replacing 10 of the values in press with P0 at t0 to make the curvefit also fit that point
+    for i in range(10):
+        tP[i*4] = 1950
+        press[i*4] = 1.6e+06
+    #fit curve
+    p, cov = curve_fit(fit_pressure_model, tP, press, sigma=sigma, p0 = [0.0015, 0.035, 0.6])
+
+    #curvefit doesn't give good values so we've generated our own using manual calibration
+    ap = 0.0015
+    bp = 0.035
+    cp = 0.6
+    p = [ap, bp, cp]
+
+    # Generate model for past values
+    tP0, xP0 = solve_pressure_ode(
+        ode_pressure_model,
+        1950,
+        tP[-1],
+        0.25,
+        1.6e+06,
+        pars=[0, 0, P0, p[0], p[1], p[2]])
+
+    #plot in red
+    axP.plot(tP0, xP0, "r-")
+    # Plot know pressures as well
+    axP.plot(Yearp, Pressure, "ko")
+
+    # Preallocate arrays 
+    tPset = [0] * len(Future_Productions)
+    xPset = [0] * len(Future_Productions)
+    HandlesP = [0] * len(Future_Productions)
+
+    # colours array
+    colours = ["r", "g", "b", "y", "m", "c"]
+
+    # Loop through each future prediction
+    for i in range(len(Future_Productions)):
+        # get t and x values  for this future production
+        tPset[i], xPset[i] = solve_pressure_ode(
+        ode_pressure_model,
+        tP[-1],
+        Future_Time,
+        0.25,
+        xP0[-1],
+        pars=[0, 0, P0, p[0], p[1], p[2]],
+        future_prediction = Future_Productions[i]*365
+        )
+        (HandlesP[i], ) = axP.plot(tPset[i], xPset[i], colours[i%6] + "-")
+    
+    axP.legend(handles = HandlesP, labels = Labels)
+    plt.title(label = 'Pressure')
+    plt.show()
+
+
+    #NOW PLOTTING TEMPERATURE
+    tT = np.arange(YearT[0], (YearT[-1]+1), 1)
+    temperature = np.interp(tT, YearT, Temp)
+    sigmaT = [0.2] * len(temperature)
+    pT, covT = curve_fit(fit_temperature_model, tT, temperature, sigma=sigmaT, p0 = [200, 5e-10, 0.025])
+    figT, axT = plt.subplots(1, 1)
+
+    tT0, xT0 = solve_temperature_ode(
+        ode_temperature_model,
+        tT[0],
+        tT[-1],
+        1,
+        Temp[0],
+        pars=[TCguess, pT[0], pT[1], pT[2], ap, bp, np.interp(np.arange(start=tT[0],stop=tT[-1]),tP0,xP0), P0]
+    )
+    axT.plot(tT0, xT0, "r-", label="test")
+    axT.plot(YearT, Temp, "ko")
+
+    tTset = [0] * len(Future_Productions)
+    xTset = [0] * len(Future_Productions)
+    HandlesT = [0] * len(Future_Productions)
+
+    for i in range(len(Future_Productions)):
+        tTset[i], xTset[i] = solve_temperature_ode(
+        ode_temperature_model,
+        tT[-1],
+        Future_Time,
+        1,
+        xT0[-1],
+        pars=[TCguess, pT[0], pT[1], pT[2], ap, bp, np.interp(np.arange(start=tT[-1],stop=Future_Time),tPset[i], xPset[i]), P0]
+        )
+        (HandlesT[i], ) = axT.plot(tTset[i], xTset[i], colours[i%6] + "-")
+    
+    axT.legend(handles = HandlesT, labels = Labels)
+    plt.title(label = 'Temperature')
+    plt.show()
 
 if __name__ == "__main__":
-    t = np.arange(Yearq2[0], (Yearq2[-1] + 0.25), 0.25)
+    Future_Productions = [10000, 0, 20000]
+    Future_Time = 2070
+    Labels=["Current Production", "Cease all production", "Double current production"]
+    plot_model(Future_Productions, Future_Time, Labels)
+
+    '''t = np.arange(Yearq2[0], (Yearq2[-1] + 0.25), 0.25)
     t1 = np.arange(Yearp[0], (Yearp[-1] + 0.25), 0.25)
     press = np.interp(t1, Yearp, Pressure)
     fig, ax = plt.subplots(1, 1)
@@ -494,7 +623,7 @@ if __name__ == "__main__":
         future_prediction=20000,
     )
     ax.plot(t1, x1, "r-", label="test")
-    '''(line1,) = ax.plot(t2, x2, "r-", label="test1")
+    (line1,) = ax.plot(t2, x2, "r-", label="test1")
     (line2,) = ax.plot(t3, x3, "b-", label="test2")
     (line3,) = ax.plot(t4, x4, "g-", label="test3")
     ax.legend(
@@ -546,7 +675,7 @@ if __name__ == "__main__":
         ax.plot(tp1, xp1, "k-", alpha=0.2, lw=0.5)
         ax.plot(tp2, xp2, "r-", alpha=0.2, lw=0.5)
         ax.plot(tp3, xp3, "b-", alpha=0.2, lw=0.5)
-        ax.plot(tp4, xp4, "g-", alpha=0.2, lw=0.5)'''
+        ax.plot(tp4, xp4, "g-", alpha=0.2, lw=0.5)
 
     ax.plot(Yearp, Pressure, "ko")
 
@@ -570,37 +699,7 @@ if __name__ == "__main__":
     axT.plot(YearT, Temp, "ko")
     #axT.plot(tT, temperature, "r-")
 
-    plt.show()
-
-def plot_model():
-    """Plot the LPM over top of the data.
-
-    Parameters:
-    -----------
-    none
-
-    Returns:
-    --------
-    none
-
-    Notes:
-    ------
-    This function called within if __name__ == "__main__":
+    plt.show()'''
 
 
-    """
-    f, ax1 = plt.subplots(nrows=1, ncols=1)
-    t, x = solve_pressure_ode(
-        ode_pressure_model,
-        1984.75,
-        2010,
-        0.25,
-        -0.20629999999999882,
-        [0.00052, 0.00065, 22],
-    )
-    t1 = 0
-    x1 = 0
-    ax1.plot(t, x, "b-", label="model")
-    ax1.plot(t1, x1, "r-", label="model1")
-
-    plt.show()
+    
