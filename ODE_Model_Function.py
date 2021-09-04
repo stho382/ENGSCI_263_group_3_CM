@@ -520,9 +520,15 @@ def plot_model(Future_Productions, Future_Time, Labels):
         )
         (HandlesP[i], ) = axP.plot(tPset[i], xPset[i], colours[i%6] + "-")
     
+    stakeholder_labels = ['ROTORUA CITY COUNCIL', 'TŪHOURANGI NGĀTI WĀHIAO', 'LOCAL CHAMBER OF COMMERCE']
+
+    for stakeholder_P in range(len(stakeholder_labels)):
+        axP.text(tPset[stakeholder_P][-1], xPset[stakeholder_P][-1] - 105000,stakeholder_labels[stakeholder_P], horizontalalignment = 'right', verticalalignment='bottom', fontsize=7, fontweight='bold')
+
     axP.legend(handles = HandlesP, labels = Labels)
     plt.title(label = 'Pressure')
-    plt.show()
+    figP.savefig("Pressure.png")
+    plt.close(figP)
 
 
     #NOW PLOTTING TEMPERATURE
@@ -558,9 +564,13 @@ def plot_model(Future_Productions, Future_Time, Labels):
         )
         (HandlesT[i], ) = axT.plot(tTset[i], xTset[i], colours[i%6] + "-")
     
+    for stakeholder_T in range(len(stakeholder_labels)):
+      axT.text(tTset[stakeholder_P][-1], xTset[stakeholder_P][-1] - 0.01,stakeholder_labels[stakeholder_P], horizontalalignment = 'right', verticalalignment='bottom', fontsize=7, fontweight='bold')  
+    
     axT.legend(handles = HandlesT, labels = Labels)
     plt.title(label = 'Temperature')
-    plt.show()
+    figT.savefig("Temperature.png")
+    plt.close(figT)
 
 if __name__ == "__main__":
     Future_Productions = [10000, 0, 20000]
