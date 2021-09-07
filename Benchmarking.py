@@ -80,6 +80,50 @@ def plot_benchmark():
         conv.append(x3[-1])
         Pressure_conv.append(x3)
 
+    
+    ###################################################################################
+    # Deploying only one subplot with pressure and temperature - Configuring pressure #
+    ###################################################################################
+
+    fPT = plt.figure(constrained_layout=True, figsize=(11, 8))
+    fPT.suptitle("Pressure and Temperature Benchmarking", fontsize=20)
+
+    # Creating 2x1 subpfigure - one for pressue and one for temperature
+    subfigsPT = fPT.subfigures(nrows=2, ncols=1)
+
+    # ----------#
+    # Pressure #
+    # ----------#
+
+    # Adding plots to subfig 1
+    subfigsPT[0].suptitle("Pressure Benchmarks", fontsize=15, fontweight="bold")
+
+    axP = subfigsPT[0].subplots(nrows=1, ncols=3)
+
+    axP[0].plot(t2, P2, "r-", label="analytic")
+    axP[0].plot(t2, P, "bx-", label="numerical")
+
+    axP[0].legend()
+
+    # Analytical vs Numerical Plot
+    axP[0].set_title("Analytic vs Numerical solution")
+    axP[0].set_xlabel("Time")
+    axP[0].set_ylabel("Pressure")
+
+    # Relative Error Plot
+    axP[1].plot(t, error, "g-")
+
+    axP[1].set_title("Relative Error, (analytic - numerical) / analytic")
+    axP[1].set_xlabel("Time")
+    axP[1].set_ylabel("Error")
+
+    # Convergence Testing Plot
+    axP[2].plot(inv_dt, conv, "k*")
+
+    axP[2].set_title("Convergence testing")
+    axP[2].set_xlabel("1/step size")
+    axP[2].set_ylabel("Final value")
+
     """f1, ax1 = plt.subplots(nrows=1, ncols=1)
 
     ax1.plot(t2, P2, "r-", label="analytic")
@@ -157,6 +201,9 @@ def plot_benchmark():
     axP[2].set_ylabel("Final value")
 
     fP.suptitle('Pressure Benchmarks', fontsize=16)"""
+
+
+
 
     # Temperature ODE
     # The analytic solution takes q as an input but the numerical solution takes Pressure
@@ -299,48 +346,13 @@ def plot_benchmark():
 
     fT.suptitle('Temperature Benchmarks', fontsize=16)"""
 
-    ##########################################################
-    # Deploying only one subplot with pressure and temperature
-    ##########################################################
 
-    fPT = plt.figure(constrained_layout=True)
-    fPT.suptitle("Pressure and Temperature Benchmarking", fontsize=20)
 
-    # Creating 2x1 subpfigure - one for pressue and one for temperature
-    subfigsPT = fPT.subfigures(nrows=2, ncols=1)
 
-    # ----------#
-    # Pressure #
-    # ----------#
 
-    # Adding plots to subfig 1
-    subfigsPT[0].suptitle("Pressure Benchmarks", fontsize=15, fontweight="bold")
-
-    axP = subfigsPT[0].subplots(nrows=1, ncols=3)
-
-    axP[0].plot(t2, P2, "r-", label="analytic")
-    axP[0].plot(t2, P, "bx-", label="numerical")
-
-    axP[0].legend()
-
-    # Analytical vs Numerical Plot
-    axP[0].set_title("Analytic vs Numerical solution")
-    axP[0].set_xlabel("Time")
-    axP[0].set_ylabel("Pressure")
-
-    # Relative Error Plot
-    axP[1].plot(t, error, "g-")
-
-    axP[1].set_title("Relative Error, (analytic - numerical) / analytic")
-    axP[1].set_xlabel("Time")
-    axP[1].set_ylabel("Error")
-
-    # Convergence Testing Plot
-    axP[2].plot(inv_dt, conv, "k*")
-
-    axP[2].set_title("Convergence testing")
-    axP[2].set_xlabel("1/step size")
-    axP[2].set_ylabel("Final value")
+    ######################################################################################
+    # Deploying only one subplot with pressure and temperature - Configuring temperature #
+    ######################################################################################
 
     # -------------#
     # Temperature #
