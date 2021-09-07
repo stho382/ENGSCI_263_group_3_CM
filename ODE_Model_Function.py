@@ -498,10 +498,29 @@ def plot_model(Future_Productions, Future_Time, Labels):
         1.6e+06,
         pars=[0, 0, P0, p[0], p[1], p[2]])
 
+
     #plot in red
     axP.plot(tP0, xP0, "r-")
     # Plot know pressures as well
     axP.plot(Yearp, Pressure, "ko")
+
+    multi_var_samples = 100
+    # create multivariate for uncertainty
+    psP = np.random.multivariate_normal(p, cov/50, multi_var_samples)
+    
+    tp0 = [0] * multi_var_samples
+    xp0 = [0] * multi_var_samples
+
+    for i in range(multi_var_samples):
+        pi = psP[i]
+        tp0[i], xp0[i] = solve_pressure_ode(
+        ode_pressure_model,
+        1950,
+        tP[-1],
+        0.25,
+        1.6e+06,
+        pars=[0, 0, P0, pi[0], pi[1], pi[2]])
+        axP.plot(tp0[i], xp0[i], "k-", alpha=0.2, lw=0.5)
 
     # Preallocate arrays 
     tPset = [0] * len(Future_Productions)
@@ -510,6 +529,9 @@ def plot_model(Future_Productions, Future_Time, Labels):
 
     # colours array
     colours = ["r", "g", "b", "y", "m", "c"]
+
+    tPsetuncert = tPset * 1
+    xPsetuncert = xPset * 1
 
     # Loop through each future prediction
     for i in range(len(Future_Productions)):
@@ -524,6 +546,23 @@ def plot_model(Future_Productions, Future_Time, Labels):
         future_prediction = Future_Productions[i]*365
         )
         (HandlesP[i], ) = axP.plot(tPset[i], xPset[i], colours[i%6] + "-")
+        
+        # uncertainty
+        tPsetuncert[i] = [0]*multi_var_samples
+        xPsetuncert[i] = [0]*multi_var_samples
+
+        for j in range(multi_var_samples):
+            pi = psP[j]
+            tPsetuncert[i][j], xPsetuncert[i][j] = solve_pressure_ode(
+            ode_pressure_model,
+            tP[-1],
+            Future_Time,
+            0.25,
+            xp0[j][-1],
+            pars=[0, 0, P0, pi[0], pi[1], pi[2]],
+            future_prediction = Future_Productions[i]*365
+            )
+            axP.plot(tPsetuncert[i][j], xPsetuncert[i][j], colours[i%6] + "-", alpha=0.2, lw=0.5)
     
     axP.legend(handles = HandlesP, labels = Labels)
     plt.title(label = 'Pressure')
@@ -533,7 +572,7 @@ def plot_model(Future_Productions, Future_Time, Labels):
     #NOW PLOTTING TEMPERATURE
     tT = np.arange(YearT[0], (YearT[-1]+1), 1)
     temperature = np.interp(tT, YearT, Temp)
-    sigmaT = [0.2] * len(temperature)
+    sigmaT = [0.3] * len(temperature)
     pT, covT = curve_fit(fit_temperature_model, tT, temperature, sigma=sigmaT, p0 = [200, 5e-10, 0.025])
     figT, axT = plt.subplots(1, 1)
 
@@ -548,9 +587,31 @@ def plot_model(Future_Productions, Future_Time, Labels):
     axT.plot(tT0, xT0, "r-", label="test")
     axT.plot(YearT, Temp, "ko")
 
+    #plot uncert
+    psT = np.random.multivariate_normal(pT, covT*3, multi_var_samples)
+
+    tt0 = [0] * multi_var_samples
+    xt0 = [0] * multi_var_samples
+
+    for i in range(multi_var_samples):
+        Ti = psT[i]
+        tt0[i], xt0[i] = solve_temperature_ode(
+        ode_temperature_model,
+        tT[0],
+        tT[-1],
+        1,
+        Temp[0],
+        pars=[TCguess, Ti[0], Ti[1], Ti[2], ap, bp, np.interp(np.arange(start=tT[0],stop=tT[-1]),tP0,xP0), P0]
+        )
+        axT.plot(tt0[i], xt0[i], "k-", alpha=0.2, lw=0.5)
+        
+
+
     tTset = [0] * len(Future_Productions)
     xTset = [0] * len(Future_Productions)
     HandlesT = [0] * len(Future_Productions)
+
+    psT = np.random.multivariate_normal(pT, covT, multi_var_samples)
 
     for i in range(len(Future_Productions)):
         tTset[i], xTset[i] = solve_temperature_ode(
@@ -562,6 +623,18 @@ def plot_model(Future_Productions, Future_Time, Labels):
         pars=[TCguess, pT[0], pT[1], pT[2], ap, bp, np.interp(np.arange(start=tT[-1],stop=Future_Time),tPset[i], xPset[i]), P0]
         )
         (HandlesT[i], ) = axT.plot(tTset[i], xTset[i], colours[i%6] + "-")
+
+        for j in range(multi_var_samples):
+            Ti = psT[j]
+            tTset[i], xTset[i] = solve_temperature_ode(
+            ode_temperature_model,
+            tT[-1],
+            Future_Time,
+            1,
+            xt0[j][-1],
+            pars=[TCguess, Ti[0], Ti[1], Ti[2], ap, bp, np.interp(np.arange(start=tT[-1],stop=Future_Time),tPset[i], xPset[i]), P0]
+            )
+            axT.plot(tTset[i], xTset[i], colours[i%6] + "-", alpha=0.2, lw=0.5)
     
     axT.legend(handles = HandlesT, labels = Labels)
     plt.title(label = 'Temperature')
