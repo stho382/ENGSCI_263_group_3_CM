@@ -106,7 +106,7 @@ def plot_benchmark():
     ax1.set_ylabel("Error")
 
     # EITHER show the plot to the screen OR save a version of it to the disk
-    save_figure = False
+
     if not save_figure:
         plt.show()
     else:
@@ -119,7 +119,6 @@ def plot_benchmark():
     ax1.set_xlabel("1/step size")
     ax1.set_ylabel("Final value")
 
-    save_figure = False
     if not save_figure:
         plt.show()
     else:
@@ -213,7 +212,7 @@ def plot_benchmark():
     ax1.set_ylabel("Error")
 
     # EITHER show the plot to the screen OR save a version of it to the disk
-    save_figure = False
+
     if not save_figure:
         plt.show()
     else:
@@ -226,8 +225,10 @@ def plot_benchmark():
     ax1.set_xlabel("1/step size")
     ax1.set_ylabel("Final value")
 
-    save_figure = False
     if not save_figure:
         plt.show()
     else:
         plt.savefig("Pressure benchmark.png", dpi=300)
+
+
+plot_benchmark()
