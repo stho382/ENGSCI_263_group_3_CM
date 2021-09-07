@@ -226,6 +226,11 @@ def solve_pressure_ode(f, t0, t1, dt, x0, pars, future_prediction='False', bench
             for i in arrays:
                 if i == 0:
                     dqdt[i] = -dqdt[i]
+            # assuming change spread over gradual_change/4 years
+            gradual_change = 80
+            if future_prediction != 3650000:
+                for i in range(gradual_change):
+                    dqdt[i] = dqdt[i] + (future_prediction-3650000)/gradual_change
 
     # loop that iterates improved euler'smethod
     for i in range(nt):
@@ -563,9 +568,9 @@ def plot_model(Future_Productions, Future_Time, Labels):
     plt.show()
 
 if __name__ == "__main__":
-    Future_Productions = [10000, 0, 20000]
-    Future_Time = 2070
-    Labels=["Current Production", "Cease all production", "Double current production"]
+    Future_Productions = [10000, 0, 20000, 5000]
+    Future_Time = 2080
+    Labels=["Current Production", "Cease all production", "Double current production", "Half Current Production"]
     plot_model(Future_Productions, Future_Time, Labels)
 
     '''t = np.arange(Yearq2[0], (Yearq2[-1] + 0.25), 0.25)
