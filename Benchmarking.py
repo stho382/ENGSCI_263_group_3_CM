@@ -123,7 +123,7 @@ def plot_benchmark():
     if not save_figure:
         plt.show()
     else:
-        plt.savefig("Pressure benchmark.png", dpi=300)"""
+        plt.savefig("Pressure benchmark.png", dpi=300)
 
 
     ##################################
@@ -158,7 +158,7 @@ def plot_benchmark():
     axP[2].set_xlabel("1/step size")
     axP[2].set_ylabel("Final value")
 
-    fP.suptitle('Pressure Benchmarks', fontsize=16)
+    fP.suptitle('Pressure Benchmarks', fontsize=16)"""
 
 
 
@@ -268,7 +268,7 @@ def plot_benchmark():
     if not save_figure:
         plt.show()
     else:
-        plt.savefig("Pressure benchmark.png", dpi=300)"""
+        plt.savefig("Pressure benchmark.png", dpi=300)
 
 
     #####################################
@@ -303,15 +303,106 @@ def plot_benchmark():
     axT[2].set_xlabel("1/step size")
     axT[2].set_ylabel("Final value")
 
-    fT.suptitle('Temperature Benchmarks', fontsize=16)
+    fT.suptitle('Temperature Benchmarks', fontsize=16)"""
+
+
+
+    ##########################################################
+    # Deploying only one subplot with pressure and temperature
+    ##########################################################
+
+    fPT = plt.figure(constrained_layout = True)
+    fPT.suptitle('Pressure and Temperature Benchmarking', fontsize=20)
+
+    # Creating 2x1 subpfigure - one for pressue and one for temperature
+    subfigsPT = fPT.subfigures(nrows=2, ncols=1)
+
+    
+    #----------#
+    # Pressure #
+    #----------#
+
+    # Adding plots to subfig 1
+    subfigsPT[0].suptitle('Pressure Benchmarks', fontsize=15, fontweight='bold')
+
+    axP = subfigsPT[0].subplots(nrows=1, ncols=3)
+
+    axP[0].plot(t2, P2, "r-", label="analytic")
+    axP[0].plot(t2, P, "bx-", label="numerical")
+
+    axP[0].legend()
+
+    #Analytical vs Numerical Plot
+    axP[0].set_title("Analytic vs Numerical solution")
+    axP[0].set_xlabel("Time")
+    axP[0].set_ylabel("Pressure")
+
+
+    # Relative Error Plot
+    axP[1].plot(t, error, "g-")
+
+    axP[1].set_title("Relative Error, (analytic - numerical) / analytic")
+    axP[1].set_xlabel("Time")
+    axP[1].set_ylabel("Error")
+
+
+    # Convergence Testing Plot
+    axP[2].plot(inv_dt, conv, "k*")
+
+    axP[2].set_title("Convergence testing")
+    axP[2].set_xlabel("1/step size")
+    axP[2].set_ylabel("Final value")
+
+
+    #-------------#
+    # Temperature #
+    #-------------#
+
+    # Adding plots to subfig 2
+    subfigsPT[1].suptitle('Temperature Benchmarks', fontsize=15, fontweight='bold')
+
+    axT = subfigsPT[1].subplots(nrows=1, ncols=3)
+
+    axT[0].plot(t2, T2, "r-", label="analytic")
+    axT[0].plot(t2, T, "bx-", label="numerical")
+
+    axT[0].legend()
+
+    # Analytical v Numerical Plot
+    axT[0].set_title("Analytic vs Numerical solution")
+    axT[0].set_xlabel("Time")
+    axT[0].set_ylabel("Temperature")
+
+
+    # Relative Error Plot
+    axT[1].plot(t, error, "g-")
+
+    axT[1].set_title("Relative Error, (analytic - numerical) / analytic")
+    axT[1].set_xlabel("Time")
+    axT[1].set_ylabel("Error")
+
+
+    # Convergence Testing Plot
+    axT[2].plot(inv_dt, conv, "k*")
+
+    axT[2].set_title("Convergence testing")
+    axT[2].set_xlabel("1/step size")
+    axT[2].set_ylabel("Final value")
+
+
+
+    #-----------------------#
+    # Show Plot / Save Plot #
+    #-----------------------#   
 
     # EITHER show the plot to the screen OR save a version of it to the disk
     save_figure = False
     if not save_figure:
         plt.show()
     else:
-        fP.savefig("Pressure_Benchmarking.png", dpi=300)
-        fT.savefig("Temperature_Benchmarking.png", dpi=300)
+        fPT.savefig("Pressure_and_Temperature_Benchmarks.png", dpi=300)
+
+
 
 
 if __name__ == "__main__":
