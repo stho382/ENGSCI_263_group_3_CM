@@ -80,14 +80,10 @@ def plot_benchmark():
         conv.append(x3[-1])
         Pressure_conv.append(x3)
 
-    f, (ax1, ax2, ax3) = plt.subplots(nrows=1, ncols=3)
+    f1, ax1 = plt.subplots(nrows=1, ncols=1)
 
     ax1.plot(t2, P2, "r-", label="analytic")
     ax1.plot(t2, P, "bx-", label="numerical")
-
-    ax2.plot(t, error, "g-")
-
-    ax3.plot(inv_dt, conv, "k*")
 
     ax1.legend()
 
@@ -95,14 +91,34 @@ def plot_benchmark():
     ax1.set_xlabel("Time")
     ax1.set_ylabel("Pressure")
 
-    ax2.set_title("Relative Error, (analytic - numerical) / analytic")
-    ax2.set_xlabel("Time")
-    ax2.set_ylabel("Error")
-
-    ax3.set_title("Convergence testing")
-    ax3.set_xlabel("1/step size")
-    ax3.set_ylabel("Final value")
     # EITHER show the plot to the screen OR save a version of it to the disk
+    save_figure = False
+    if not save_figure:
+        plt.show()
+    else:
+        plt.savefig("Pressure benchmark.png", dpi=300)
+
+    f2, ax1 = plt.subplots(nrows=1, ncols=1)
+    ax1.plot(t, error, "g-")
+
+    ax1.set_title("Relative Error, (analytic - numerical) / analytic")
+    ax1.set_xlabel("Time")
+    ax1.set_ylabel("Error")
+
+    # EITHER show the plot to the screen OR save a version of it to the disk
+    save_figure = False
+    if not save_figure:
+        plt.show()
+    else:
+        plt.savefig("Pressure benchmark.png", dpi=300)
+
+    f3, ax1 = plt.subplots(nrows=1, ncols=1)
+    ax1.plot(inv_dt, conv, "k*")
+
+    ax1.set_title("Convergence testing")
+    ax1.set_xlabel("1/step size")
+    ax1.set_ylabel("Final value")
+
     save_figure = False
     if not save_figure:
         plt.show()
@@ -126,11 +142,10 @@ def plot_benchmark():
     Tc = 3
     q = 1
     dqdt = 0
-    Tt = 3
     T = 0
 
     # solve numerically
-    pars = [Tt, Tc, T0, at, bt, ap, bp, P, P0]
+    pars = [Tc, T0, at, bt, ap, bp, P, P0]
 
     t, T = solve_temperature_ode(ode_temperature_model, t0, t1, dt, x0, pars)
     t2 = np.zeros(len(t))
@@ -172,14 +187,10 @@ def plot_benchmark():
         )
         conv.append(x3[-1])
 
-    f, (ax1, ax2, ax3) = plt.subplots(nrows=1, ncols=3)
+    f1, ax1 = plt.subplots(nrows=1, ncols=1)
 
     ax1.plot(t2, T2, "r-", label="analytic")
     ax1.plot(t2, T, "bx-", label="numerical")
-
-    ax2.plot(t, error, "g-")
-
-    ax3.plot(inv_dt, conv, "k*")
 
     ax1.legend()
 
@@ -187,19 +198,36 @@ def plot_benchmark():
     ax1.set_xlabel("Time")
     ax1.set_ylabel("Temperature")
 
-    ax2.set_title("Relative Error, (analytic - numerical) / analytic")
-    ax2.set_xlabel("Time")
-    ax2.set_ylabel("Error")
-
-    ax3.set_title("Convergence testing")
-    ax3.set_xlabel("1/step size")
-    ax3.set_ylabel("Final value")
     # EITHER show the plot to the screen OR save a version of it to the disk
     save_figure = False
     if not save_figure:
         plt.show()
     else:
-        plt.savefig("Temperature benchmark.png", dpi=300)
+        plt.savefig("Pressure benchmark.png", dpi=300)
 
+    f2, ax1 = plt.subplots(nrows=1, ncols=1)
+    ax1.plot(t, error, "g-")
 
-plot_benchmark()
+    ax1.set_title("Relative Error, (analytic - numerical) / analytic")
+    ax1.set_xlabel("Time")
+    ax1.set_ylabel("Error")
+
+    # EITHER show the plot to the screen OR save a version of it to the disk
+    save_figure = False
+    if not save_figure:
+        plt.show()
+    else:
+        plt.savefig("Pressure benchmark.png", dpi=300)
+
+    f3, ax1 = plt.subplots(nrows=1, ncols=1)
+    ax1.plot(inv_dt, conv, "k*")
+
+    ax1.set_title("Convergence testing")
+    ax1.set_xlabel("1/step size")
+    ax1.set_ylabel("Final value")
+
+    save_figure = False
+    if not save_figure:
+        plt.show()
+    else:
+        plt.savefig("Pressure benchmark.png", dpi=300)
