@@ -80,7 +80,6 @@ def plot_benchmark():
         conv.append(x3[-1])
         Pressure_conv.append(x3)
 
-    
     ###################################################################################
     # Deploying only one subplot with pressure and temperature - Configuring pressure #
     ###################################################################################
@@ -201,9 +200,6 @@ def plot_benchmark():
     axP[2].set_ylabel("Final value")
 
     fP.suptitle('Pressure Benchmarks', fontsize=16)"""
-
-
-
 
     # Temperature ODE
     # The analytic solution takes q as an input but the numerical solution takes Pressure
@@ -345,10 +341,6 @@ def plot_benchmark():
     axT[2].set_ylabel("Final value")
 
     fT.suptitle('Temperature Benchmarks', fontsize=16)"""
-
-
-
-
 
     ######################################################################################
     # Deploying only one subplot with pressure and temperature - Configuring temperature #
