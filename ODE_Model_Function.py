@@ -442,7 +442,7 @@ def interpolate_production_values(t, prod1=Prodq1, t1=Yearq1, prod2=Prodq2, t2=Y
     #prod = p1 + p2
     return p2
 
-def plot_model(Future_Productions, Future_Time, Labels):
+def plot_model(Future_Productions, Future_Time, Labels, uncertainty = True):
     """Plot the model
 
     Parameters:
@@ -505,22 +505,24 @@ def plot_model(Future_Productions, Future_Time, Labels):
     axP.plot(Yearp, Pressure, "ko")
 
     multi_var_samples = 100
-    # create multivariate for uncertainty
-    psP = np.random.multivariate_normal(p, cov/50, multi_var_samples)
-    
-    tp0 = [0] * multi_var_samples
-    xp0 = [0] * multi_var_samples
 
-    for i in range(multi_var_samples):
-        pi = psP[i]
-        tp0[i], xp0[i] = solve_pressure_ode(
-        ode_pressure_model,
-        1950,
-        tP[-1],
-        0.25,
-        1.6e+06,
-        pars=[0, 0, P0, pi[0], pi[1], pi[2]])
-        axP.plot(tp0[i], xp0[i], "k-", alpha=0.2, lw=0.5)
+    if uncertainty == True:
+        # create multivariate for uncertainty
+        psP = np.random.multivariate_normal(p, cov/50, multi_var_samples)
+    
+        tp0 = [0] * multi_var_samples
+        xp0 = [0] * multi_var_samples
+
+        for i in range(multi_var_samples):
+                pi = psP[i]
+                tp0[i], xp0[i] = solve_pressure_ode(
+                ode_pressure_model,
+                1950,
+                tP[-1],
+                0.25,
+                1.6e+06,
+                pars=[0, 0, P0, pi[0], pi[1], pi[2]])
+                axP.plot(tp0[i], xp0[i], "k-", alpha=0.2, lw=0.5)
 
     # Preallocate arrays 
     tPset = [0] * len(Future_Productions)
@@ -547,22 +549,23 @@ def plot_model(Future_Productions, Future_Time, Labels):
         )
         (HandlesP[i], ) = axP.plot(tPset[i], xPset[i], colours[i%6] + "-")
         
-        # uncertainty
-        tPsetuncert[i] = [0]*multi_var_samples
-        xPsetuncert[i] = [0]*multi_var_samples
+        if uncertainty == True:
+            # uncertainty
+            tPsetuncert[i] = [0]*multi_var_samples
+            xPsetuncert[i] = [0]*multi_var_samples
 
-        for j in range(multi_var_samples):
-            pi = psP[j]
-            tPsetuncert[i][j], xPsetuncert[i][j] = solve_pressure_ode(
-            ode_pressure_model,
-            tP[-1],
-            Future_Time,
-            0.25,
-            xp0[j][-1],
-            pars=[0, 0, P0, pi[0], pi[1], pi[2]],
-            future_prediction = Future_Productions[i]*365
-            )
-            axP.plot(tPsetuncert[i][j], xPsetuncert[i][j], colours[i%6] + "-", alpha=0.2, lw=0.5)
+            for j in range(multi_var_samples):
+                pi = psP[j]
+                tPsetuncert[i][j], xPsetuncert[i][j] = solve_pressure_ode(
+                ode_pressure_model,
+                tP[-1],
+                Future_Time,
+                0.25,
+                xp0[j][-1],
+                pars=[0, 0, P0, pi[0], pi[1], pi[2]],
+                future_prediction = Future_Productions[i]*365
+                )
+                axP.plot(tPsetuncert[i][j], xPsetuncert[i][j], colours[i%6] + "-", alpha=0.2, lw=0.5)
     
     stakeholder_labels = ['ROTORUA CITY COUNCIL', 'TŪHOURANGI NGĀTI WĀHIAO', 'LOCAL CHAMBER OF COMMERCE']
 
@@ -570,6 +573,7 @@ def plot_model(Future_Productions, Future_Time, Labels):
         axP.text(tPset[stakeholder_P][-1], xPset[stakeholder_P][-1] - 105000,stakeholder_labels[stakeholder_P], horizontalalignment = 'right', verticalalignment='bottom', fontsize=7, fontweight='bold')
 
     axP.legend(handles = HandlesP, labels = Labels)
+
     plt.title(label = 'Pressure')
     figP.savefig("Pressure.png")
     plt.close(figP)
@@ -593,23 +597,24 @@ def plot_model(Future_Productions, Future_Time, Labels):
     axT.plot(tT0, xT0, "r-", label="test")
     axT.plot(YearT, Temp, "ko")
 
-    #plot uncert
-    psT = np.random.multivariate_normal(pT, covT*3, multi_var_samples)
+    if uncertainty == True:
+        #plot uncert
+        psT = np.random.multivariate_normal(pT, covT*3, multi_var_samples)
 
-    tt0 = [0] * multi_var_samples
-    xt0 = [0] * multi_var_samples
+        tt0 = [0] * multi_var_samples
+        xt0 = [0] * multi_var_samples
 
-    for i in range(multi_var_samples):
-        Ti = psT[i]
-        tt0[i], xt0[i] = solve_temperature_ode(
-        ode_temperature_model,
-        tT[0],
-        tT[-1],
-        1,
-        Temp[0],
-        pars=[TCguess, Ti[0], Ti[1], Ti[2], ap, bp, np.interp(np.arange(start=tT[0],stop=tT[-1]),tP0,xP0), P0]
-        )
-        axT.plot(tt0[i], xt0[i], "k-", alpha=0.2, lw=0.5)
+        for i in range(multi_var_samples):
+            Ti = psT[i]
+            tt0[i], xt0[i] = solve_temperature_ode(
+            ode_temperature_model,
+            tT[0],
+            tT[-1],
+            1,
+            Temp[0],
+            pars=[TCguess, Ti[0], Ti[1], Ti[2], ap, bp, np.interp(np.arange(start=tT[0],stop=tT[-1]),tP0,xP0), P0]
+            )
+            axT.plot(tt0[i], xt0[i], "k-", alpha=0.2, lw=0.5)
         
 
 
@@ -630,17 +635,18 @@ def plot_model(Future_Productions, Future_Time, Labels):
         )
         (HandlesT[i], ) = axT.plot(tTset[i], xTset[i], colours[i%6] + "-")
 
-        for j in range(multi_var_samples):
-            Ti = psT[j]
-            tTset[i], xTset[i] = solve_temperature_ode(
-            ode_temperature_model,
-            tT[-1],
-            Future_Time,
-            1,
-            xt0[j][-1],
-            pars=[TCguess, Ti[0], Ti[1], Ti[2], ap, bp, np.interp(np.arange(start=tT[-1],stop=Future_Time),tPset[i], xPset[i]), P0]
-            )
-            axT.plot(tTset[i], xTset[i], colours[i%6] + "-", alpha=0.2, lw=0.5)
+        if uncertainty == True:
+            for j in range(multi_var_samples):
+                Ti = psT[j]
+                tTset[i], xTset[i] = solve_temperature_ode(
+                ode_temperature_model,
+                tT[-1],
+                Future_Time,
+                1,
+                xt0[j][-1],
+                pars=[TCguess, Ti[0], Ti[1], Ti[2], ap, bp, np.interp(np.arange(start=tT[-1],stop=Future_Time),tPset[i], xPset[i]), P0]
+                )
+                axT.plot(tTset[i], xTset[i], colours[i%6] + "-", alpha=0.2, lw=0.5)
     
     for stakeholder_T in range(len(stakeholder_labels)):
       axT.text(tTset[stakeholder_P][-1], xTset[stakeholder_P][-1] - 0.01,stakeholder_labels[stakeholder_P], horizontalalignment = 'right', verticalalignment='bottom', fontsize=7, fontweight='bold')  
