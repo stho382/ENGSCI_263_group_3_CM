@@ -604,8 +604,9 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
     axP.legend(handles=HandlesP, labels=Labels)
 
     plt.title(label="Pressure")
-    figP.savefig("Pressure.png")
-    plt.close(figP)
+    plt.show()
+    #figP.savefig("Pressure.png")
+    #plt.close(figP)
 
     # NOW PLOTTING TEMPERATURE
     tT = np.arange(YearT[0], (YearT[-1] + 1), 1)
@@ -731,8 +732,9 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
 
     axT.legend(handles=HandlesT, labels=Labels)
     plt.title(label="Temperature")
-    figT.savefig("Temperature.png")
-    plt.close(figT)
+    plt.show()
+    #figT.savefig("Temperature.png")
+    #plt.close(figT)
 
     return tT0, xT0, tP0, xP0
 

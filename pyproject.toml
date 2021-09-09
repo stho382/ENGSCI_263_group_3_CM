@@ -4,7 +4,7 @@ requires = ["poetry-core>=1.0.0"]
 
 [tool]
 [tool.poetry]
-authors = ["SebastianThoma3 <<>>"]
+authors = ["stho382 <stho382@aucklanduni.ac.nz>", "spou548 <spou548@aucklanduni.ac.nz>", "jsam271 <jsam271@aucklanduni.ac.nz>", "nsun719 <nsun719@aucklanduni.ac.nz>", "toco314 <toco314@aucklanduni.ac.nz>"]
 description = ""
 name = "engsci263group3cm"
 version = "0.1.0"
