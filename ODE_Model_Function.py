@@ -762,13 +762,13 @@ def plot_misfit(xp, fp, xt, ft):
     f1.suptitle("Misfit in model vs observations")
     f1.set_size_inches(9, 6)
     # EITHER show the plot to the screen OR save a version of it to the disk
-    save_figure = True
+    save_figure = False
     if not save_figure:
         plt.show()
     else:
         plt.savefig("misfit.png", dpi=300)
 
-
+"""
 if __name__ == "__main__":
     Future_Productions = [10000, 0, 20000, 5000]
     Future_Time = 2080
@@ -779,4 +779,4 @@ if __name__ == "__main__":
         "Half Current Production",
     ]
     tT0, xT0, tP0, xP0 = plot_model(Future_Productions, Future_Time, Labels)
-    plot_misfit(tP0, xP0, tT0, xT0)
+    plot_misfit(tP0, xP0, tT0, xT0)"""

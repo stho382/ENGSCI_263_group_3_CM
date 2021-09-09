@@ -388,8 +388,9 @@ def plot_benchmark():
     if not save_figure:
         plt.show()
     else:
-        fPT.savefig("Pressure_and_Temperature_Benchmarks.png", dpi=300)
+        fPT.savefig("Pressure_and_Temperature_Benchmarks.png")
 
-
+"""
 if __name__ == "__main__":
-    plot_benchmark()
+  # Plotting code from benchmarks.py
+  plot_benchmark()"""
