@@ -10,7 +10,7 @@ if __name__ == "__main__":
   plot_visualisations()
 
   # Plotting code from benchmarks.py
-  #plot_benchmark()
+  plot_benchmark()
 
   # Plotting code from ODE_Model_Function.py
   # Plot initial, unimproved models
