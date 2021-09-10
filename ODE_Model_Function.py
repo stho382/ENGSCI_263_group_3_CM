@@ -69,10 +69,10 @@ WaterLevel, Yearp, Prodq1, Yearq1, Prodq2, Yearq2, Temp, YearT = load_ODE_Model_
 # Pressure should be in Pa rather than MPa
 Pressure = (1 + ((WaterLevel - 296.85))) * 1000000
 # Production should be per year rather than per day
-Prodq2 = Prodq2 * 365
-Prodq1 = Prodq1 * 365
-P0 = 1.6e06
-TCguess = 20
+Prodq2 = Prodq2*365
+Prodq1 = Prodq1*365
+P0 = 1.6e+06
+TCguess = 30
 
 
 def ode_pressure_model(t, P, q, dqdt, P0, ap, bp, cp):
@@ -238,7 +238,8 @@ def solve_pressure_ode(
             gradual_change = 80
             if future_prediction != 3650000:
                 for i in range(gradual_change):
-                    dqdt[i] = dqdt[i] + (future_prediction - 3650000) / gradual_change
+                    dqdt[i] = dqdt[i] + (future_prediction-3650000)/gradual_change
+            
 
     # loop that iterates improved euler'smethod
     for i in range(nt):
@@ -414,7 +415,7 @@ def fit_temperature_model(tT, T0, at, bt):
         tT[-1],
         1,
         Temp[0],
-        pars=[20, T0, at, bt, ap, bp, pressure, P0],
+        pars=[30, T0, at, bt, ap, bp, pressure, P0],
     )
 
     return pT
@@ -494,16 +495,14 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
     # create plot
     figP, axP = plt.subplots(1, 1)
     # not really sure what sigma value to use
-    sigma = [0.2] * len(press)
+    sigma = [0.15] * len(press)
 
-    # replacing 10 of the values in press with P0 at t0 to make the curvefit also fit that point
+    '''# replacing 10 of the values in press with P0 at t0 to make the curvefit also fit that point
     for i in range(10):
-        tP[i * 4] = 1950
-        press[i * 4] = 1.6e06
-    # fit curve
-    p, cov = curve_fit(
-        fit_pressure_model, tP, press, sigma=sigma, p0=[0.0015, 0.035, 0.6]
-    )
+        tP[i*4] = 1950
+        press[i*4] = 1.6e+06'''
+    #fit curve
+    p, cov = curve_fit(fit_pressure_model, tP, press, sigma=sigma, p0 = [0.0015, 0.035, 0.6])
 
     # curvefit doesn't give good values so we've generated our own using manual calibration
     ap = 0.0015
@@ -517,9 +516,10 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
         1950,
         tP[-1],
         0.25,
-        1.6e06,
-        pars=[0, 0, P0, p[0], p[1], p[2]],
-    )
+        1.6e+06,
+        pars=[0, 0, P0, p[0], p[1], p[2]])
+
+    cov = cov/5
 
     # plot in red
     axP.plot(tP0, xP0, "r-")
@@ -530,8 +530,8 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
 
     if uncertainty == True:
         # create multivariate for uncertainty
-        psP = np.random.multivariate_normal(p, cov / 50, multi_var_samples)
-
+        psP = np.random.multivariate_normal(p, cov, multi_var_samples)
+    
         tp0 = [0] * multi_var_samples
         xp0 = [0] * multi_var_samples
 
@@ -746,7 +746,7 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
     figT.savefig("Temperature.png")
     plt.close(figT)
 
-    return tT0, xT0, tP0, xP0
+return tT0, xT0, tP0, xP0
 
 
 def plot_misfit(xp, fp, xt, ft):
