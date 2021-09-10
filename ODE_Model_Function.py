@@ -734,6 +734,16 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
     figT.savefig("Temperature.png")
     plt.close(figT)
 
+
+    lpm_values_array = np.random.multivariate_normal(p, cov / 10000000, multi_var_samples)
+    porosity_vals = np.zeros(len(lpm_values_array))
+    for i in range(0, len(lpm_values_array)):
+        porosity_vals[i] = porosity_equation(lpm_values_array[i][0], lpm_values_array[i][1], lpm_values_array[i][2], 0.3, 28000000)
+    
+    plt.hist(porosity_vals, color = 'blue', edgecolor = 'blue', bins = 20)
+    plt.show()
+    
+
     return tT0, xT0, tP0, xP0
 
 
@@ -791,13 +801,12 @@ def porosity_equation(a,b,c,S0,A):
     """
     g = 9.81                            # acceleration due to gravity
     a_adjusted = a / 1000               # converting a to SI units
-    b_adjusted = b / 3.154 * 10^7       # converting b to SI units
-    c_adjusted = c * (3.154 * 10^2)     # converting c to SI units
+    b_adjusted = b / (3.154 * 10**7)       # converting b to SI units
+    c_adjusted = c * (3.154 * 10**2)     # converting c to SI units
 
     # Equation to find porosity
-    phi = (g(a_adjusted - (b_adjusted * c_adjusted))) / ((1-S0)*A*a_adjusted^2)
+    phi = (g*(a_adjusted - (b_adjusted * c_adjusted))) / ((1-S0)*A*a_adjusted**2)
     return phi 
-
 
 
 if __name__ == "__main__":
