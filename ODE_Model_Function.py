@@ -825,8 +825,12 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
         )
 
     axP.legend(handles=HandlesP, labels=Labels)
-
-    plt.title(label="Pressure")
+    if uncertainty == True:
+        axP.set_title("Pressure Model - Predictions (with uncertainty)")
+    else:
+        axP.set_title("Pressure Model - Predictions")
+    axP.set_xlabel("Year")
+    axP.set_ylabel("Temperature (Celsius)")
 
     # NOW PLOTTING TEMPERATURE
     tT = np.arange(YearT[0], (YearT[-1] + 1), 1)
@@ -943,7 +947,7 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
     for stakeholder_T in range(len(stakeholder_labels)):
         axT.text(
             tTset[stakeholder_P][-1],
-            xTset[stakeholder_P][-1] - 0.01,
+            xTset[stakeholder_P][-1] - 0.1,
             stakeholder_labels[stakeholder_P],
             horizontalalignment="right",
             verticalalignment="bottom",
@@ -952,7 +956,12 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
         )
 
     axT.legend(handles=HandlesT, labels=Labels)
-    plt.title(label="Temperature")
+    if uncertainty == True:
+        axT.set_title("Temperature Model - Predictions (with uncertainty)")
+    else:
+        axT.set_title("Temperature Model - Predictions")
+    axT.set_xlabel("Year")
+    axT.set_ylabel("Temperature (Celsius)")
     plt.show()
 
     # Toggle between save and display
