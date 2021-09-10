@@ -5,9 +5,13 @@ from visualisation import *
 
 if __name__ == "__main__":
   # Plotting code from benchmarks.py
-  plot_benchmark()
+  #plot_benchmark()
 
-  # Plotting code form ODE_Model_Function.py
+  # Plotting code from ODE_Model_Function.py
+  # Plot just current time
+
+
+  # Plot model without uncertainties
   Future_Productions = [10000, 0, 20000, 5000]
   Future_Time = 2080
   Labels = [
@@ -16,6 +20,9 @@ if __name__ == "__main__":
       "Double current production",
       "Half Current Production",
   ]
+  plot_model(Future_Productions, Future_Time, Labels, uncertainty = False)
+
+  #Plot with uncertainties
   tT0, xT0, tP0, xP0 = plot_model(Future_Productions, Future_Time, Labels)
   
   plot_misfit(tP0, xP0, tT0, xT0)
