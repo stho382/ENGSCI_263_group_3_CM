@@ -3,13 +3,17 @@ from ODE_Model_Function import *
 from test_functions import *
 from visualisation import *
 
+
 if __name__ == "__main__":
   # Plotting code from benchmarks.py
   #plot_benchmark()
 
   # Plotting code from ODE_Model_Function.py
   # Plot just current time
+  plot_initial_attempt(back_date = True)
+  plot_second_attempt(back_date = True)
 
+  plot_final_model()
 
   # Plot model without uncertainties
   Future_Productions = [10000, 0, 20000, 5000]
