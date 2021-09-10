@@ -481,13 +481,13 @@ def interpolate_production_values(t, prod1=Prodq1, t1=Yearq1, prod2=Prodq2, t2=Y
     return p2
 
 def plot_initial_attempt(back_date = False):
-     """Plot's our first attempt at a pressure model
+    """Plot's our first attempt at a pressure model
      
-     Parameters:
+    Parameters:
     -----------
     back_date : boolean
             If backdate is true, we extrapolate pressure data to the past
-     """
+    """
 
     # creates pressure array
     tP = np.arange(Yearp[0], (Yearp[-1] + 0.25), 0.25)
@@ -532,6 +532,7 @@ def plot_initial_attempt(back_date = False):
     axP.set_xlabel("Year")
     axP.set_ylabel("Pressure (Pa)")
 
+    # toggle to either save or show graph
     show_not_save = True
     if show_not_save == True:
         plt.show()
@@ -591,6 +592,7 @@ def plot_second_attempt(back_date = False):
     axP.set_xlabel("Year")
     axP.set_ylabel("Pressure (Pa)")
 
+    # toggle to either save or show graph
     show_not_save = True
     if show_not_save == True:
         plt.show()
@@ -598,6 +600,80 @@ def plot_second_attempt(back_date = False):
         figP.savefig("Second_Pressure_Model.png")
         plt.close(figP)
 
+def plot_final_model():
+    """Plots our second attempt at a pressure model.
+    Is called in main """
+
+    # creates pressure array
+    tP = np.arange(Yearp[0], (Yearp[-1] + 0.25), 0.25)
+    # create plot
+    figP, axP = plt.subplots(1, 1)
+
+    # curvefit doesn't give good values so we've generated our own using manual calibration
+    ap = 0.0015
+    bp = 0.035
+    cp = 0.6
+    p = [ap, bp, cp]
+
+    # Generate model for past values
+    tP0, xP0 = solve_pressure_ode(
+        ode_pressure_model,
+        1950,
+        tP[-1],
+        0.25,
+        1.6e06,
+        pars=[0, 0, P0, p[0], p[1], p[2]],
+    )
+
+    # plot in red
+    axP.plot(tP0, xP0, "r-")
+    axP.set_title("Final Pressure Model")
+    axP.set_xlabel("Year")
+    axP.set_ylabel("Pressure (Pa)")
+    # Plot know pressures as well
+    axP.plot(Yearp, Pressure, "ko")
+
+    # NOW PLOTTING TEMPERATURE
+    tT = np.arange(YearT[0], (YearT[-1] + 1), 1)
+    temperature = np.interp(tT, YearT, Temp)
+    sigmaT = [0.3] * len(temperature)
+    pT, covT = curve_fit(
+        fit_temperature_model, tT, temperature, sigma=sigmaT, p0=[200, 5e-10, 0.025])
+    figT, axT = plt.subplots(1, 1)
+
+    tT0, xT0 = solve_temperature_ode(
+        ode_temperature_model,
+        tT[0],
+        tT[-1],
+        1,
+        Temp[0],
+        pars=[
+            TCguess,
+            pT[0],
+            pT[1],
+            pT[2],
+            ap,
+            bp,
+            np.interp(np.arange(start=tT[0], stop=tT[-1]), tP0, xP0),
+            P0,
+        ],
+    )
+    axT.plot(tT0, xT0, "r-", label="test")
+    axT.set_title("Final Temperature Model")
+    axT.set_xlabel("Year")
+    axT.set_ylabel("Temperature (Celsius)")
+    axT.plot(YearT, Temp, "ko")
+
+    # toggle to either save or show graphs
+    show_not_save = True
+    if show_not_save == True:
+        plt.show()
+    else:
+        figP.savefig("Final_Pressure_Model.png")
+        plt.close(figP)
+        figT.savefig("Final_Temperature_Model.png")
+        plt.close(figT)
+    
 
 def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
     """Plot the model
