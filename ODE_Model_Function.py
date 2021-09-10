@@ -61,18 +61,16 @@ def load_ODE_Model_data():
     return WaterLevel, Yearp, Prodq1, Yearq1, Prodq2, Yearq2, Temp, YearT
 
 
-### MAKE SURE TO MOVE TO THE MAIN PY FUNCTION RATHER THAN KEEPING HERE
-# These take the data we have and set to global variables
-
-# Do we delete this, not sure if it is the only place where we load in the data?
+#Global Variables established
 WaterLevel, Yearp, Prodq1, Yearq1, Prodq2, Yearq2, Temp, YearT = load_ODE_Model_data()
 # Pressure should be in Pa rather than MPa
 Pressure = (1 + ((WaterLevel - 296.85))) * 1000000
 # Production should be per year rather than per day
 Prodq2 = Prodq2 * 365
 Prodq1 = Prodq1 * 365
+# Given Parameters
 P0 = 1.6e06
-TCguess = 20
+TCguess = 30
 
 
 def ode_pressure_model(t, P, q, dqdt, P0, ap, bp, cp):
@@ -236,10 +234,15 @@ def solve_pressure_ode(
                 if i == 0:
                     dqdt[i] = -dqdt[i]
             # assuming change spread over gradual_change/4 years
-            gradual_change = 80
-            if future_prediction != 3650000:
+            gradual_change = 40
+            if future_prediction > 3650000:
                 for i in range(gradual_change):
-                    dqdt[i] = dqdt[i] + (future_prediction - 3650000) / gradual_change
+                    dqdt[i] = dqdt[i] + (future_prediction-3650000)/gradual_change
+            # if a limit is introduced, assume production will quickly be brought down over time
+            # to be under limit - past evidence indicates this will take 4 years (ie 12 * 0.25 steps)
+            if future_prediction < 3650000:
+                for i in range(12):
+                    dqdt[i] = dqdt[i] + (future_prediction-3650000)/12
 
     # loop that iterates improved euler'smethod
     for i in range(nt):
@@ -350,6 +353,20 @@ def interpolate_pressure_values(pv, tv, t):
 
 
 def find_dqdt(q, h):
+    """ Takes an array of q (production) over time and returns the dq/dt array
+    
+    Parameters:
+    -----------
+    q : array-like
+            Array of q values
+    h : int
+            time-step size between each q value 
+    
+    Returns:
+    --------
+    dqdt : array-like
+            array of dqdt values
+    """
 
     dqdt = 0.0 * q
 
@@ -373,6 +390,20 @@ def fit_pressure_model(t, ap, bp, cp):
         0.25,
         Pressure[0],
         pars=[0, 0, P0, ap, bp, cp],
+    )
+
+    return p
+
+def fit_pressure_model_P0(t, ap, bp, cp, P00):
+    # Like fit pressure model but also takes P0 as a variable rather than as a given
+
+    (t, p) = solve_pressure_ode(
+        ode_pressure_model,
+        t[1] - 0.25,
+        t[-1],
+        0.25,
+        Pressure[0],
+        pars=[0, 0, P00, ap, bp, cp],
     )
 
     return p
