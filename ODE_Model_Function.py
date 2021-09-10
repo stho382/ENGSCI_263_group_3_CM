@@ -495,7 +495,7 @@ def plot_initial_attempt(back_date = False):
     press = np.interp(tP, Yearp, Pressure)
     # create plot
     figP, axP = plt.subplots(1, 1)
-    # not really sure what sigma value to use
+    # sigma values created using ad hoc calibration 
     sigma = [0.2] * len(press)
 
     p, cov = curve_fit(
@@ -555,7 +555,7 @@ def plot_second_attempt(back_date = False):
     press = np.interp(tP, Yearp, Pressure)
     # create plot
     figP, axP = plt.subplots(1, 1)
-    # not really sure what sigma value to use
+    # sigma values created using ad hoc calibration 
     sigma = [0.2] * len(press)
 
     p, cov = curve_fit(
@@ -706,13 +706,9 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
     press = np.interp(tP, Yearp, Pressure)
     # create plot
     figP, axP = plt.subplots(1, 1)
-    # not really sure what sigma value to use
-    sigma = [0.2] * len(press)
+    # sigma values created using ad hoc calibration 
+    sigma = [0.15] * len(press)
 
-    # replacing 10 of the values in press with P0 at t0 to make the curvefit also fit that point
-    for i in range(10):
-        tP[i * 4] = 1950
-        press[i * 4] = 1.6e06
     # fit curve
     p, cov = curve_fit(
         fit_pressure_model, tP, press, sigma=sigma, p0=[0.0015, 0.035, 0.6]
@@ -734,6 +730,8 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
         pars=[0, 0, P0, p[0], p[1], p[2]],
     )
 
+    cov = cov/4
+
     # plot in red
     axP.plot(tP0, xP0, "r-")
     # Plot know pressures as well
@@ -743,7 +741,7 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
 
     if uncertainty == True:
         # create multivariate for uncertainty
-        psP = np.random.multivariate_normal(p, cov / 50, multi_var_samples)
+        psP = np.random.multivariate_normal(p, cov, multi_var_samples)
 
         tp0 = [0] * multi_var_samples
         xp0 = [0] * multi_var_samples
@@ -829,14 +827,11 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
     axP.legend(handles=HandlesP, labels=Labels)
 
     plt.title(label="Pressure")
-    plt.show()
-    #figP.savefig("Pressure.png")
-    #plt.close(figP)
 
     # NOW PLOTTING TEMPERATURE
     tT = np.arange(YearT[0], (YearT[-1] + 1), 1)
     temperature = np.interp(tT, YearT, Temp)
-    sigmaT = [0.3] * len(temperature)
+    sigmaT = [0.35] * len(temperature)
     pT, covT = curve_fit(
         fit_temperature_model, tT, temperature, sigma=sigmaT, p0=[200, 5e-10, 0.025]
     )
@@ -859,12 +854,13 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
             P0,
         ],
     )
+
     axT.plot(tT0, xT0, "r-", label="test")
     axT.plot(YearT, Temp, "ko")
 
     if uncertainty == True:
         # plot uncert
-        psT = np.random.multivariate_normal(pT, covT * 3, multi_var_samples)
+        psT = np.random.multivariate_normal(pT, covT*4, multi_var_samples)
 
         tt0 = [0] * multi_var_samples
         xt0 = [0] * multi_var_samples
@@ -958,8 +954,16 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
     axT.legend(handles=HandlesT, labels=Labels)
     plt.title(label="Temperature")
     plt.show()
-    #figT.savefig("Temperature.png")
-    #plt.close(figT)
+
+    # Toggle between save and display
+    save_figure = False
+    if not save_figure:
+        plt.show()
+    else:
+        figT.savefig("Temperature.png")
+        plt.close(figT)
+        figP.savefig("Pressure.png")
+        plt.close(figP)
 
     return tT0, xT0, tP0, xP0
 
