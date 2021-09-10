@@ -27,7 +27,7 @@ def plot_benchmark():
     # Pressure ODE
     t0 = 0
     t1 = 10
-    dt = 0.1
+    dt = 0.2
     x0 = 3
     P0 = 3
     ap = 1
@@ -384,7 +384,7 @@ def plot_benchmark():
     # -----------------------#
 
     # EITHER show the plot to the screen OR save a version of it to the disk
-    save_figure = False
+    save_figure = True
     if not save_figure:
         plt.show()
     else:

@@ -190,8 +190,8 @@ def solve_pressure_ode(
             List of parameters passed to ODE function f. [q, dqdt, P0, ap, bp, cp]
     future_prediction : False or value
             False if not being used for a future prediction, otherwise contains value of future predicted production rate
-        benchmark : boolean
-                        Tells if this is being used for a benchmark test
+    benchmark : boolean
+            Tells if this is being used for a benchmark test
 
 
     Returns:
@@ -221,9 +221,8 @@ def solve_pressure_ode(
         # is some dqdt over time, and this has a significant impact on the equation for pressure
         # therefore we create a dqdt relative to the size of the q
         if future_prediction != "False":
-            # production constant of future predicted valyes
+            # production constant of future predicted values
             prod = [future_prediction] * len(ts)
-            # dqdt = [0] * len(ts)
 
             # dqdt seems to be about 1/300th of q if constant q
             dqdt = [future_prediction / 300] * len(ts)
@@ -466,7 +465,20 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
 
     Returns:
     --------
-    none
+
+    tT0: list
+        times the temperature has been evaluated at
+
+    xT0: list
+        temperatures at a set of times evaluated using the model
+
+    tP0: list
+        times the pressure has been evaluated at
+
+    xP0: list
+        pressures at a set of times evaluated using the model
+
+
 
     Notes:
     ------
@@ -737,7 +749,33 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
 
 
 def plot_misfit(xp, fp, xt, ft):
+    """
+    Plot the model misfit
 
+    Parameters:
+    -----------
+        xp: array or list
+            times the pressure has been evaluated at
+
+        fp: array or list
+            pressures at a set of times evaluated using the model
+
+        xt: array or list
+            times the temperature has been evaluated at
+
+        ft: array or list
+            temperatures at a set of times evaluated using the model
+
+    Returns:
+    --------
+    none
+
+    Notes:
+    ------
+    This function called within if __name__ == "__main__":
+
+
+    """
     temperature_points = np.interp(YearT, xt, ft)
     temp_error = temperature_points - Temp
 
@@ -761,7 +799,7 @@ def plot_misfit(xp, fp, xt, ft):
     f1.suptitle("Misfit in model vs observations")
     f1.set_size_inches(9, 6)
     # EITHER show the plot to the screen OR save a version of it to the disk
-    save_figure = True
+    save_figure = False
     if not save_figure:
         plt.show()
     else:
