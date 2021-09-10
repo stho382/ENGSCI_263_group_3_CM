@@ -733,8 +733,7 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
     plt.title(label="Temperature")
     figT.savefig("Temperature.png")
     plt.close(figT)
-
-return tT0, xT0, tP0, xP0
+    return tT0, xT0, tP0, xP0
 
 
 def plot_misfit(xp, fp, xt, ft):
