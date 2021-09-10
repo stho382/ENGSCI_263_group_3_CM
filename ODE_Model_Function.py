@@ -69,10 +69,10 @@ WaterLevel, Yearp, Prodq1, Yearq1, Prodq2, Yearq2, Temp, YearT = load_ODE_Model_
 # Pressure should be in Pa rather than MPa
 Pressure = (1 + ((WaterLevel - 296.85))) * 1000000
 # Production should be per year rather than per day
-Prodq2 = Prodq2*365
-Prodq1 = Prodq1*365
-P0 = 1.6e+06
-TCguess = 30
+Prodq2 = Prodq2 * 365
+Prodq1 = Prodq1 * 365
+P0 = 1.6e06
+TCguess = 20
 
 
 def ode_pressure_model(t, P, q, dqdt, P0, ap, bp, cp):
@@ -190,8 +190,8 @@ def solve_pressure_ode(
             List of parameters passed to ODE function f. [q, dqdt, P0, ap, bp, cp]
     future_prediction : False or value
             False if not being used for a future prediction, otherwise contains value of future predicted production rate
-    benchmark : boolean
-            Tells if this is being used for a benchmark test
+        benchmark : boolean
+                        Tells if this is being used for a benchmark test
 
 
     Returns:
@@ -221,8 +221,9 @@ def solve_pressure_ode(
         # is some dqdt over time, and this has a significant impact on the equation for pressure
         # therefore we create a dqdt relative to the size of the q
         if future_prediction != "False":
-            # production constant of future predicted values
+            # production constant of future predicted valyes
             prod = [future_prediction] * len(ts)
+            # dqdt = [0] * len(ts)
 
             # dqdt seems to be about 1/300th of q if constant q
             dqdt = [future_prediction / 300] * len(ts)
@@ -238,8 +239,7 @@ def solve_pressure_ode(
             gradual_change = 80
             if future_prediction != 3650000:
                 for i in range(gradual_change):
-                    dqdt[i] = dqdt[i] + (future_prediction-3650000)/gradual_change
-            
+                    dqdt[i] = dqdt[i] + (future_prediction - 3650000) / gradual_change
 
     # loop that iterates improved euler'smethod
     for i in range(nt):
@@ -415,7 +415,7 @@ def fit_temperature_model(tT, T0, at, bt):
         tT[-1],
         1,
         Temp[0],
-        pars=[30, T0, at, bt, ap, bp, pressure, P0],
+        pars=[20, T0, at, bt, ap, bp, pressure, P0],
     )
 
     return pT
@@ -465,20 +465,7 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
 
     Returns:
     --------
-
-    tT0: list
-        times the temperature has been evaluated at
-
-    xT0: list
-        temperatures at a set of times evaluated using the model
-
-    tP0: list
-        times the pressure has been evaluated at
-
-    xP0: list
-        pressures at a set of times evaluated using the model
-
-
+    none
 
     Notes:
     ------
@@ -495,14 +482,16 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
     # create plot
     figP, axP = plt.subplots(1, 1)
     # not really sure what sigma value to use
-    sigma = [0.15] * len(press)
+    sigma = [0.2] * len(press)
 
-    '''# replacing 10 of the values in press with P0 at t0 to make the curvefit also fit that point
+    # replacing 10 of the values in press with P0 at t0 to make the curvefit also fit that point
     for i in range(10):
-        tP[i*4] = 1950
-        press[i*4] = 1.6e+06'''
-    #fit curve
-    p, cov = curve_fit(fit_pressure_model, tP, press, sigma=sigma, p0 = [0.0015, 0.035, 0.6])
+        tP[i * 4] = 1950
+        press[i * 4] = 1.6e06
+    # fit curve
+    p, cov = curve_fit(
+        fit_pressure_model, tP, press, sigma=sigma, p0=[0.0015, 0.035, 0.6]
+    )
 
     # curvefit doesn't give good values so we've generated our own using manual calibration
     ap = 0.0015
@@ -516,10 +505,9 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
         1950,
         tP[-1],
         0.25,
-        1.6e+06,
-        pars=[0, 0, P0, p[0], p[1], p[2]])
-
-    cov = cov/5
+        1.6e06,
+        pars=[0, 0, P0, p[0], p[1], p[2]],
+    )
 
     # plot in red
     axP.plot(tP0, xP0, "r-")
@@ -530,8 +518,8 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
 
     if uncertainty == True:
         # create multivariate for uncertainty
-        psP = np.random.multivariate_normal(p, cov, multi_var_samples)
-    
+        psP = np.random.multivariate_normal(p, cov / 50, multi_var_samples)
+
         tp0 = [0] * multi_var_samples
         xp0 = [0] * multi_var_samples
 
@@ -745,37 +733,12 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
     plt.title(label="Temperature")
     figT.savefig("Temperature.png")
     plt.close(figT)
+
     return tT0, xT0, tP0, xP0
 
 
 def plot_misfit(xp, fp, xt, ft):
-    """
-    Plot the model misfit
 
-    Parameters:
-    -----------
-        xp: array or list
-            times the pressure has been evaluated at
-
-        fp: array or list
-            pressures at a set of times evaluated using the model
-
-        xt: array or list
-            times the temperature has been evaluated at
-
-        ft: array or list
-            temperatures at a set of times evaluated using the model
-
-    Returns:
-    --------
-    none
-
-    Notes:
-    ------
-    This function called within if __name__ == "__main__":
-
-
-    """
     temperature_points = np.interp(YearT, xt, ft)
     temp_error = temperature_points - Temp
 
@@ -799,11 +762,42 @@ def plot_misfit(xp, fp, xt, ft):
     f1.suptitle("Misfit in model vs observations")
     f1.set_size_inches(9, 6)
     # EITHER show the plot to the screen OR save a version of it to the disk
-    save_figure = False
+    save_figure = True
     if not save_figure:
         plt.show()
     else:
         plt.savefig("misfit.png", dpi=300)
+
+def porosity_equation(a,b,c,S0,A):
+    """Return porosity (phi) for a geothermal field.
+        
+        Parameters:
+    -----------
+    a : float
+            lumped parameter a
+    b : float
+            lumped parameter b
+    c : float
+            lumped parameter c
+    S0 : float
+            vector of time values, for bore hole 2
+    A : float
+            area of geothermal field
+
+    Returns
+    -------
+    phi : float
+            porosity of geothermal field.
+    """
+    g = 9.81                            # acceleration due to gravity
+    a_adjusted = a / 1000               # converting a to SI units
+    b_adjusted = b / 3.154 * 10^7       # converting b to SI units
+    c_adjusted = c * (3.154 * 10^2)     # converting c to SI units
+
+    # Equation to find porosity
+    phi = (g(a_adjusted - (b_adjusted * c_adjusted))) / ((1-S0)*A*a_adjusted^2)
+    return phi 
+
 
 
 if __name__ == "__main__":
