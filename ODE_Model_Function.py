@@ -480,6 +480,124 @@ def interpolate_production_values(t, prod1=Prodq1, t1=Yearq1, prod2=Prodq2, t2=Y
     # prod = p1 + p2
     return p2
 
+def plot_initial_attempt(back_date = False):
+     """Plot's our first attempt at a pressure model
+     
+     Parameters:
+    -----------
+    back_date : boolean
+            If backdate is true, we extrapolate pressure data to the past
+     """
+
+    # creates pressure array
+    tP = np.arange(Yearp[0], (Yearp[-1] + 0.25), 0.25)
+    # interp pressure values at time array points
+    press = np.interp(tP, Yearp, Pressure)
+    # create plot
+    figP, axP = plt.subplots(1, 1)
+    # not really sure what sigma value to use
+    sigma = [0.2] * len(press)
+
+    p, cov = curve_fit(
+        fit_pressure_model_P0, tP, press, sigma=sigma, p0=[0.0015, 0.035, 0.6, 1.6e+06]
+    )
+
+    # Generate model for past values
+    tP0, xP0 = solve_pressure_ode(
+        ode_pressure_model,
+        tP[0],
+        tP[-1],
+        0.25,
+        press[0],
+        pars=[0, 0, p[3], p[0], p[1], p[2]])
+    
+    #plot in red
+    axP.plot(tP0, xP0, "r-")
+
+    cov = cov/5
+
+    if back_date == True:
+        yall, xall = solve_pressure_ode(
+            ode_pressure_model,
+            tP[0],
+            1950,
+            -0.25,
+            press[0],
+            pars=[0, 0, p[3], p[0], p[1], p[2]])
+        axP.plot(yall, xall, "k-")
+
+    # Plot know pressures as well
+    axP.plot(Yearp, Pressure, "ko")
+    axP.set_title("Initial Pressure Model")
+    axP.set_xlabel("Year")
+    axP.set_ylabel("Pressure (Pa)")
+
+    show_not_save = True
+    if show_not_save == True:
+        plt.show()
+    else:
+        figP.savefig("Initial_Pressure_Model.png")
+        plt.close(figP)
+
+def plot_second_attempt(back_date = False):
+    """Plots our second attempt at a pressure model
+     
+    Parameters:
+    -----------
+    back_date : boolean
+            If backdate is true, we extrapolate pressure data to the past
+    """
+    
+    # creates pressure array
+    tP = np.arange(Yearp[0], (Yearp[-1] + 0.25), 0.25)
+    # interp pressure values at time array points
+    press = np.interp(tP, Yearp, Pressure)
+    # create plot
+    figP, axP = plt.subplots(1, 1)
+    # not really sure what sigma value to use
+    sigma = [0.2] * len(press)
+
+    p, cov = curve_fit(
+        fit_pressure_model, tP, press, sigma=sigma, p0=[0.0015, 0.035, 0.6]
+    )
+
+    # Generate model for past values
+    tP0, xP0 = solve_pressure_ode(
+        ode_pressure_model,
+        tP[0],
+        tP[-1],
+        0.25,
+        press[0],
+        pars=[0, 0, P0, p[0], p[1], p[2]])
+    
+    #plot in red
+    axP.plot(tP0, xP0, "r-")
+
+    cov = cov/5
+
+    if back_date == True:
+        yall, xall = solve_pressure_ode(
+            ode_pressure_model,
+            tP[0],
+            1950,
+            -0.25,
+            press[0],
+            pars=[0, 0, P0, p[0], p[1], p[2]])
+        axP.plot(yall, xall, "k-")
+
+    # Plot know pressures as well
+    axP.plot(Yearp, Pressure, "ko")
+    axP.set_title("Second Pressure Model")
+    axP.set_xlabel("Year")
+    axP.set_ylabel("Pressure (Pa)")
+
+    show_not_save = True
+    if show_not_save == True:
+        plt.show()
+    else:
+        figP.savefig("Second_Pressure_Model.png")
+        plt.close(figP)
+
 
 def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
     """Plot the model
