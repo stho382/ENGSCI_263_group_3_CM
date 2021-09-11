@@ -26,13 +26,15 @@ For this project, our aim was to develop a computer model to analyse the pressur
   * This file contains the code for the plot we used to visualise all the data provided to us
 
 ## Executing files
+(_Note_: For the following instructions, if you have python3 installed alongside python2, use the commands _python3_ inplace of "python" & _pip3_ inplace of "pip") 
+
 
 #### Viewing Plots
 To execute and view the plots that we have made, please run the following snippets of code in the order provided:
 
 1. Install poetry package
 ```bash
-pip3 install poetry
+pip install poetry
 ```
 2. Create a virtual environment with all the packages installed
 ```bash
@@ -40,7 +42,7 @@ poetry install
 ```
 3. Run the `main.py` file in the virtual environment
 ```bash
-poetry run python3 main.py
+poetry run python main.py
 ```
 
 #### Executing tests
