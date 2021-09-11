@@ -729,7 +729,7 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
             fontsize=7,
             fontweight="bold",
         )
-    axT.hlines(y=149, xmin=1955, xmax =2085, colors='k', linestyles='--')
+    axT.hlines(y=147, xmin=1955, xmax =2085, colors='k', linestyles='--')
     axT.set_xlim(1957.5,2082.5)
     axT.legend(handles=HandlesT, labels=Labels)
     plt.title(label="Temperature")
