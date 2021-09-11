@@ -947,9 +947,9 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
 
     for stakeholder_T in range(len(stakeholder_labels)):
         axT.text(
-            tTset[stakeholder_P][-1],
-            xTset[stakeholder_P][-1] - 0.1,
-            stakeholder_labels[stakeholder_P],
+            tTset[stakeholder_T][-1],
+            xTset[stakeholder_T][-1] - 0.1,
+            stakeholder_labels[stakeholder_T],
             horizontalalignment="right",
             verticalalignment="bottom",
             fontsize=7,
@@ -963,17 +963,7 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
         axT.set_title("Temperature Model - Predictions")
     axT.set_xlabel("Year")
     axT.set_ylabel("Temperature (Celsius)")
-    plt.show()
-
-    # Toggle between save and display
-    save_figure = False
-    if not save_figure:
-        plt.show()
-    else:
-        figT.savefig("Temperature.png")
-        plt.close(figT)
-        figP.savefig("Pressure.png")
-        plt.close(figP)
+    #plt.show()
 
     # porosity graph calculations
     np.random.seed(314)
@@ -992,7 +982,7 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
     ax1.set_xlabel('Porosity')
     ax1.set_ylabel("Probabiltiy Density")
     plt.show()
-    f1.savefig("Porosity.png")
+
     return tT0, xT0, tP0, xP0
 
 
