@@ -62,18 +62,16 @@ def load_ODE_Model_data():
     return WaterLevel, Yearp, Prodq1, Yearq1, Prodq2, Yearq2, Temp, YearT
 
 
-### MAKE SURE TO MOVE TO THE MAIN PY FUNCTION RATHER THAN KEEPING HERE
-# These take the data we have and set to global variables
-
-# Do we delete this, not sure if it is the only place where we load in the data?
+#Global Variables established
 WaterLevel, Yearp, Prodq1, Yearq1, Prodq2, Yearq2, Temp, YearT = load_ODE_Model_data()
 # Pressure should be in Pa rather than MPa
 Pressure = (1 + ((WaterLevel - 296.85))) * 1000000
 # Production should be per year rather than per day
 Prodq2 = Prodq2 * 365
 Prodq1 = Prodq1 * 365
+# Given Parameters
 P0 = 1.6e06
-TCguess = 20
+TCguess = 30
 
 
 def ode_pressure_model(t, P, q, dqdt, P0, ap, bp, cp):
@@ -153,7 +151,7 @@ def ode_temperature_model(t, T, Tc, T0, at, bt, ap, bp, P, P0):
     ------
     None
     """
-    # think this is valid?
+    
     Tt = T
 
     if P > P0:
@@ -237,10 +235,15 @@ def solve_pressure_ode(
                 if i == 0:
                     dqdt[i] = -dqdt[i]
             # assuming change spread over gradual_change/4 years
-            gradual_change = 80
-            if future_prediction != 3650000:
+            gradual_change = 40
+            if future_prediction > 3650000:
                 for i in range(gradual_change):
-                    dqdt[i] = dqdt[i] + (future_prediction - 3650000) / gradual_change
+                    dqdt[i] = dqdt[i] + (future_prediction-3650000)/gradual_change
+            # if a limit is introduced, assume production will quickly be brought down over time
+            # to be under limit - past evidence indicates this will take 4 years (ie 12 * 0.25 steps)
+            if future_prediction < 3650000:
+                for i in range(12):
+                    dqdt[i] = dqdt[i] + (future_prediction-3650000)/12
 
     # loop that iterates improved euler'smethod
     for i in range(nt):
@@ -351,6 +354,20 @@ def interpolate_pressure_values(pv, tv, t):
 
 
 def find_dqdt(q, h):
+    """ Takes an array of q (production) over time and returns the dq/dt array
+    
+    Parameters:
+    -----------
+    q : array-like
+            Array of q values
+    h : int
+            time-step size between each q value 
+    
+    Returns:
+    --------
+    dqdt : array-like
+            array of dqdt values
+    """
 
     dqdt = 0.0 * q
 
@@ -374,6 +391,20 @@ def fit_pressure_model(t, ap, bp, cp):
         0.25,
         Pressure[0],
         pars=[0, 0, P0, ap, bp, cp],
+    )
+
+    return p
+
+def fit_pressure_model_P0(t, ap, bp, cp, P00):
+    # Like fit pressure model but also takes P0 as a variable rather than as a given
+
+    (t, p) = solve_pressure_ode(
+        ode_pressure_model,
+        t[1] - 0.25,
+        t[-1],
+        0.25,
+        Pressure[0],
+        pars=[0, 0, P00, ap, bp, cp],
     )
 
     return p
@@ -450,6 +481,200 @@ def interpolate_production_values(t, prod1=Prodq1, t1=Yearq1, prod2=Prodq2, t2=Y
     # prod = p1 + p2
     return p2
 
+def plot_initial_attempt(back_date = False):
+    """Plot's our first attempt at a pressure model
+     
+    Parameters:
+    -----------
+    back_date : boolean
+            If backdate is true, we extrapolate pressure data to the past
+    """
+
+    # creates pressure array
+    tP = np.arange(Yearp[0], (Yearp[-1] + 0.25), 0.25)
+    # interp pressure values at time array points
+    press = np.interp(tP, Yearp, Pressure)
+    # create plot
+    figP, axP = plt.subplots(1, 1)
+    # sigma values created using ad hoc calibration 
+    sigma = [0.2] * len(press)
+
+    p, cov = curve_fit(
+        fit_pressure_model_P0, tP, press, sigma=sigma, p0=[0.0015, 0.035, 0.6, 1.6e+06]
+    )
+
+    # Generate model for past values
+    tP0, xP0 = solve_pressure_ode(
+        ode_pressure_model,
+        tP[0],
+        tP[-1],
+        0.25,
+        press[0],
+        pars=[0, 0, p[3], p[0], p[1], p[2]])
+    
+    #plot in red
+    axP.plot(tP0, xP0, "r-")
+
+    cov = cov/5
+
+    if back_date == True:
+        yall, xall = solve_pressure_ode(
+            ode_pressure_model,
+            tP[0],
+            1950,
+            -0.25,
+            press[0],
+            pars=[0, 0, p[3], p[0], p[1], p[2]])
+        axP.plot(yall, xall, "k-")
+
+    # Plot know pressures as well
+    axP.plot(Yearp, Pressure, "ko")
+    axP.set_title("Initial Pressure Model")
+    axP.set_xlabel("Year")
+    axP.set_ylabel("Pressure (Pa)")
+
+    # toggle to either save or show graph
+    show_not_save = True
+    if show_not_save == True:
+        plt.show()
+    else:
+        figP.savefig("Initial_Pressure_Model.png")
+        plt.close(figP)
+
+def plot_second_attempt(back_date = False):
+    """Plots our second attempt at a pressure model
+     
+    Parameters:
+    -----------
+    back_date : boolean
+            If backdate is true, we extrapolate pressure data to the past
+    """
+    
+    # creates pressure array
+    tP = np.arange(Yearp[0], (Yearp[-1] + 0.25), 0.25)
+    # interp pressure values at time array points
+    press = np.interp(tP, Yearp, Pressure)
+    # create plot
+    figP, axP = plt.subplots(1, 1)
+    # sigma values created using ad hoc calibration 
+    sigma = [0.2] * len(press)
+
+    p, cov = curve_fit(
+        fit_pressure_model, tP, press, sigma=sigma, p0=[0.0015, 0.035, 0.6]
+    )
+
+    # Generate model for past values
+    tP0, xP0 = solve_pressure_ode(
+        ode_pressure_model,
+        tP[0],
+        tP[-1],
+        0.25,
+        press[0],
+        pars=[0, 0, P0, p[0], p[1], p[2]])
+    
+    #plot in red
+    axP.plot(tP0, xP0, "r-")
+
+    cov = cov/5
+
+    if back_date == True:
+        yall, xall = solve_pressure_ode(
+            ode_pressure_model,
+            tP[0],
+            1950,
+            -0.25,
+            press[0],
+            pars=[0, 0, P0, p[0], p[1], p[2]])
+        axP.plot(yall, xall, "k-")
+
+    # Plot know pressures as well
+    axP.plot(Yearp, Pressure, "ko")
+    axP.set_title("Second Pressure Model")
+    axP.set_xlabel("Year")
+    axP.set_ylabel("Pressure (Pa)")
+
+    # toggle to either save or show graph
+    show_not_save = True
+    if show_not_save == True:
+        plt.show()
+    else:
+        figP.savefig("Second_Pressure_Model.png")
+        plt.close(figP)
+
+def plot_final_model():
+    """Plots our second attempt at a pressure model.
+    Is called in main """
+
+    # creates pressure array
+    tP = np.arange(Yearp[0], (Yearp[-1] + 0.25), 0.25)
+    # create plot
+    figP, axP = plt.subplots(1, 1)
+
+    # curvefit doesn't give good values so we've generated our own using manual calibration
+    ap = 0.0015
+    bp = 0.035
+    cp = 0.6
+    p = [ap, bp, cp]
+
+    # Generate model for past values
+    tP0, xP0 = solve_pressure_ode(
+        ode_pressure_model,
+        1950,
+        tP[-1],
+        0.25,
+        1.6e06,
+        pars=[0, 0, P0, p[0], p[1], p[2]],
+    )
+
+    # plot in red
+    axP.plot(tP0, xP0, "r-")
+    axP.set_title("Final Pressure Model")
+    axP.set_xlabel("Year")
+    axP.set_ylabel("Pressure (Pa)")
+    # Plot know pressures as well
+    axP.plot(Yearp, Pressure, "ko")
+
+    # NOW PLOTTING TEMPERATURE
+    tT = np.arange(YearT[0], (YearT[-1] + 1), 1)
+    temperature = np.interp(tT, YearT, Temp)
+    sigmaT = [0.3] * len(temperature)
+    pT, covT = curve_fit(
+        fit_temperature_model, tT, temperature, sigma=sigmaT, p0=[200, 5e-10, 0.025])
+    figT, axT = plt.subplots(1, 1)
+
+    tT0, xT0 = solve_temperature_ode(
+        ode_temperature_model,
+        tT[0],
+        tT[-1],
+        1,
+        Temp[0],
+        pars=[
+            TCguess,
+            pT[0],
+            pT[1],
+            pT[2],
+            ap,
+            bp,
+            np.interp(np.arange(start=tT[0], stop=tT[-1]), tP0, xP0),
+            P0,
+        ],
+    )
+    axT.plot(tT0, xT0, "r-", label="test")
+    axT.set_title("Final Temperature Model")
+    axT.set_xlabel("Year")
+    axT.set_ylabel("Temperature (Celsius)")
+    axT.plot(YearT, Temp, "ko")
+
+    # toggle to either save or show graphs
+    show_not_save = True
+    if show_not_save == True:
+        plt.show()
+    else:
+        figP.savefig("Final_Pressure_Model.png")
+        plt.close(figP)
+        figT.savefig("Final_Temperature_Model.png")
+        plt.close(figT)
+    
 
 def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
     """Plot the model
@@ -482,13 +707,9 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
     press = np.interp(tP, Yearp, Pressure)
     # create plot
     figP, axP = plt.subplots(1, 1)
-    # not really sure what sigma value to use
-    sigma = [0.2] * len(press)
+    # sigma values created using ad hoc calibration 
+    sigma = [0.15] * len(press)
 
-    # replacing 10 of the values in press with P0 at t0 to make the curvefit also fit that point
-    for i in range(10):
-        tP[i * 4] = 1950
-        press[i * 4] = 1.6e06
     # fit curve
     p, cov = curve_fit(
         fit_pressure_model, tP, press, sigma=sigma, p0=[0.0015, 0.035, 0.6]
@@ -510,6 +731,8 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
         pars=[0, 0, P0, p[0], p[1], p[2]],
     )
 
+    cov = cov/4
+
     # plot in red
     axP.plot(tP0, xP0, "r-")
     # Plot know pressures as well
@@ -519,7 +742,7 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
 
     if uncertainty == True:
         # create multivariate for uncertainty
-        psP = np.random.multivariate_normal(p, cov / 50, multi_var_samples)
+        psP = np.random.multivariate_normal(p, cov, multi_var_samples)
 
         tp0 = [0] * multi_var_samples
         xp0 = [0] * multi_var_samples
@@ -603,15 +826,17 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
         )
 
     axP.legend(handles=HandlesP, labels=Labels)
-
-    plt.title(label="Pressure")
-    figP.savefig("Pressure.png")
-    plt.close(figP)
+    if uncertainty == True:
+        axP.set_title("Pressure Model - Predictions (with uncertainty)")
+    else:
+        axP.set_title("Pressure Model - Predictions")
+    axP.set_xlabel("Year")
+    axP.set_ylabel("Temperature (Celsius)")
 
     # NOW PLOTTING TEMPERATURE
     tT = np.arange(YearT[0], (YearT[-1] + 1), 1)
     temperature = np.interp(tT, YearT, Temp)
-    sigmaT = [0.3] * len(temperature)
+    sigmaT = [0.35] * len(temperature)
     pT, covT = curve_fit(
         fit_temperature_model, tT, temperature, sigma=sigmaT, p0=[200, 5e-10, 0.025]
     )
@@ -634,12 +859,13 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
             P0,
         ],
     )
+
     axT.plot(tT0, xT0, "r-", label="test")
     axT.plot(YearT, Temp, "ko")
 
     if uncertainty == True:
         # plot uncert
-        psT = np.random.multivariate_normal(pT, covT * 3, multi_var_samples)
+        psT = np.random.multivariate_normal(pT, covT*4, multi_var_samples)
 
         tt0 = [0] * multi_var_samples
         xt0 = [0] * multi_var_samples
@@ -721,9 +947,9 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
 
     for stakeholder_T in range(len(stakeholder_labels)):
         axT.text(
-            tTset[stakeholder_P][-1],
-            xTset[stakeholder_P][-1] - 0.01,
-            stakeholder_labels[stakeholder_P],
+            tTset[stakeholder_T][-1],
+            xTset[stakeholder_T][-1] - 0.1,
+            stakeholder_labels[stakeholder_T],
             horizontalalignment="right",
             verticalalignment="bottom",
             fontsize=7,
@@ -732,9 +958,30 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
     axT.hlines(y=147, xmin=1955, xmax =2085, colors='k', linestyles='--')
     axT.set_xlim(1957.5,2082.5)
     axT.legend(handles=HandlesT, labels=Labels)
-    plt.title(label="Temperature")
-    figT.savefig("Temperature.png")
-    plt.close(figT)
+    if uncertainty == True:
+        axT.set_title("Temperature Model - Predictions (with uncertainty)")
+    else:
+        axT.set_title("Temperature Model - Predictions")
+    axT.set_xlabel("Year")
+    axT.set_ylabel("Temperature (Celsius)")
+
+    # porosity graph calculations
+    np.random.seed(314)
+    lpm_values_array = np.random.multivariate_normal(p, cov / 10000000, multi_var_samples)
+    porosity_vals = np.zeros(len(lpm_values_array))
+    for i in range(0, len(lpm_values_array)):
+        porosity_vals[i] = porosity_equation(lpm_values_array[i][0], lpm_values_array[i][1], lpm_values_array[i][2], 0.3, 28000000)
+    
+    percentile_95 = np.percentile(porosity_vals, 95)
+    percentile_5 = np.percentile(porosity_vals, 5)
+    f1, ax1 = plt.subplots(nrows=1, ncols=1)
+    plt.hist(porosity_vals, bins = 20, histtype = "stepfilled", color = 'blue', edgecolor = 'blue')
+    ax1.vlines(x=percentile_95, ymin=0, ymax=16, colors='r', linestyles='--')
+    ax1.vlines(x=percentile_5, ymin=0, ymax=16, colors='r', linestyles='--')
+    ax1.set_ylim(0,16)
+    ax1.set_xlabel('Porosity')
+    ax1.set_ylabel("Probabiltiy Density")
+    plt.show()
 
     # porosity graph calculations
     np.random.seed(314)
@@ -788,7 +1035,7 @@ def plot_misfit(xp, fp, xt, ft):
     f1.suptitle("Misfit in model vs observations")
     f1.set_size_inches(9, 6)
     # EITHER show the plot to the screen OR save a version of it to the disk
-    save_figure = True
+    save_figure = False
     if not save_figure:
         plt.show()
     else:
@@ -824,7 +1071,7 @@ def porosity_equation(a,b,c,S0,A):
     phi = (g*(a_adjusted - (b_adjusted * c_adjusted))) / ((1-S0)*A*a_adjusted**2)
     return phi 
 
-
+"""
 if __name__ == "__main__":
     Future_Productions = [10000, 0, 20000, 5000]
     Future_Time = 2080
@@ -835,4 +1082,4 @@ if __name__ == "__main__":
         "Half current production",
     ]
     tT0, xT0, tP0, xP0 = plot_model(Future_Productions, Future_Time, Labels)
-    plot_misfit(tP0, xP0, tT0, xT0)
+    plot_misfit(tP0, xP0, tT0, xT0)"""
