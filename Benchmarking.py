@@ -384,7 +384,7 @@ def plot_benchmark():
     # -----------------------#
 
     # EITHER show the plot to the screen OR save a version of it to the disk
-    save_figure = False
+    save_figure = True
     if not save_figure:
         plt.show()
     else:
