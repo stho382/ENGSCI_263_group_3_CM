@@ -955,7 +955,8 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
             fontsize=7,
             fontweight="bold",
         )
-
+    axT.hlines(y=147, xmin=1955, xmax =2085, colors='k', linestyles='--')
+    axT.set_xlim(1957.5,2082.5)
     axT.legend(handles=HandlesT, labels=Labels)
     if uncertainty == True:
         axT.set_title("Temperature Model - Predictions (with uncertainty)")
@@ -998,8 +999,11 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
     ax1.set_ylim(0,16)
     ax1.set_xlabel('Porosity')
     ax1.set_ylabel("Probabiltiy Density")
-    plt.show()
-    f1.savefig("Porosity.png")
+    save_figure = True
+    if not save_figure:
+        plt.show()
+    else:
+        f1.savefig("Porosity.png", dpi=300)
     return tT0, xT0, tP0, xP0
 
 
@@ -1013,9 +1017,12 @@ def plot_misfit(xp, fp, xt, ft):
 
     f1, (ax1, ax2) = plt.subplots(nrows=1, ncols=2)
 
-    ax2.plot(YearT, temp_error, "r", label="error")
-    ax1.plot(Yearp, pressure_error, "r", label="error")
-
+    ax2.plot(YearT, temp_error, "r-", label="error")
+    ax2.hlines(y=0, xmin=1955, xmax =2020, colors='k', linestyles='--')
+    ax1.plot(Yearp, pressure_error, "r-", label="error")
+    ax2.set_xlim(1957.5,2015)
+    ax1.hlines(y=0, xmin=1955, xmax =2020, colors='k', linestyles='--')
+    ax1.set_xlim(1982.5,2015)
     ax1.set_title("Pressure misfit")
     ax1.set_xlabel("Time")
     ax1.set_ylabel("Error")
@@ -1069,10 +1076,10 @@ if __name__ == "__main__":
     Future_Productions = [10000, 0, 20000, 5000]
     Future_Time = 2080
     Labels = [
-        "Current Production",
+        "Current production",
         "Cease all production",
         "Double current production",
-        "Half Current Production",
+        "Half current production",
     ]
     tT0, xT0, tP0, xP0 = plot_model(Future_Productions, Future_Time, Labels)
     plot_misfit(tP0, xP0, tT0, xT0)"""

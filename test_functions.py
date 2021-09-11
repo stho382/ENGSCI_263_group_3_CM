@@ -23,13 +23,13 @@ def test_solve_temperature_ode_low_pressure():
     Tests if function ode_temperature_model is working properly by comparing it with a known result, when P0 is greater than P.
     """
     # test for when P0 > P
-    dtdt1 = [1.        , 1.46875   , 2.42089844]
-    T1, dTdt1 = solve_temperature_ode(ode_temperature_model, 0, 1, 0.5, 1, [0, 1, 2, 3, 4, 5, [6, 6, 6], 7])
+    dtdt = [1.        , 1.46875   , 2.42089844]
+    T, dTdt = solve_temperature_ode(ode_temperature_model, 0, 1, 0.5, 1, [0, 1, 2, 3, 4, 5, [6, 6, 6], 7])
 
     # Asserts for when P0 > P
-    assert abs(dTdt1[0] - dtdt1[0]) < 1.0e-4
-    assert abs(dTdt1[1] - dtdt1[1]) < 1.0e-4
-    assert abs(dTdt1[2] - dtdt1[2]) < 1.0e-4
+    assert abs(dTdt[0] - dtdt[0]) < 1.0e-4
+    assert abs(dTdt[1] - dtdt[1]) < 1.0e-4
+    assert abs(dTdt[2] - dtdt[2]) < 1.0e-4
 
 
 def test_solve_temperature_ode_high_pressure():
@@ -43,6 +43,3 @@ def test_solve_temperature_ode_high_pressure():
     assert abs(dTdt[0] - dtdt[0]) < 1.0e-4
     assert abs(dTdt[1] - dtdt[1]) < 1.0e-4
     assert abs(dTdt[2] - dtdt[2]) < 1.0e-4
-
-T, dTdt = solve_temperature_ode(ode_temperature_model, 0, 1, 0.5, 1, [0, 1, 2, 3, 4, 5, [7, 8, 9], 6])
-a=1
