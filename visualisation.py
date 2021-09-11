@@ -29,7 +29,7 @@ def plot_visualisations():
   temperature_df = pd.read_csv("" + os.getcwd() + os.sep + "data" + os.sep + "gr_T.txt")
 
   # Creating figure and subplot
-  fig, host = plt.subplots(figsize=(15,6))
+  fig, host = plt.subplots(figsize=(16,7))
       
   # Duplicating y-axis to for the purposes of adding a third axis
   par1 = host.twinx()
@@ -71,6 +71,7 @@ def plot_visualisations():
 
   # Adjust spacings w.r.t. figsize
   fig.tight_layout()
+  fig.suptitle("Visualisation of the initially data provided\n", fontweight="bold", fontsize=16)
 
   # Saving / showing the plot
   save_figure = False
