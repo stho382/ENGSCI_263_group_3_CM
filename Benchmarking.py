@@ -99,8 +99,8 @@ def plot_benchmark():
 
     axP = subfigsPT[0].subplots(nrows=1, ncols=3)
 
-    axP[0].plot(t2, P2, "r-", label="analytic")
-    axP[0].plot(t2, P, "bx-", label="numerical")
+    axP[0].plot(t2, P2, "b-", label="analytic")
+    axP[0].plot(t2, P, "rx", label="numerical")
 
     axP[0].legend()
 
@@ -108,21 +108,23 @@ def plot_benchmark():
     axP[0].set_title("Analytic vs Numerical solution")
     axP[0].set_xlabel("Time")
     axP[0].set_ylabel("Pressure")
-
+    axP[0].hlines(y=1.013475893998171, xmin=-1, xmax =11, colors='k', linestyles='--')
+    axP[0].set_xlim(-0.5,10.5)
     # Relative Error Plot
-    axP[1].plot(t, error, "g-")
-
+    axP[1].plot(t, error, "r-")
+    axP[1].hlines(y=0, xmin=-1, xmax =11, colors='k', linestyles='--')
     axP[1].set_title("Relative Error, (analytic - numerical) / analytic")
     axP[1].set_xlabel("Time")
     axP[1].set_ylabel("Error")
-
+    axP[1].set_xlim(-0.5,10.5)
     # Convergence Testing Plot
-    axP[2].plot(inv_dt, conv, "k*")
-
+    axP[2].plot(inv_dt, conv, "r*")
+    axP[2].hlines(y=1.013475893998171, xmin=-1, xmax =11, colors='k', linestyles='--')
     axP[2].set_title("Convergence testing")
     axP[2].set_xlabel("1/step size")
     axP[2].set_ylabel("Final value")
-
+    axP[2].set_xlim(0.9,3)
+    
     """f1, ax1 = plt.subplots(nrows=1, ncols=1)
 
     ax1.plot(t2, P2, "r-", label="analytic")
@@ -201,6 +203,9 @@ def plot_benchmark():
 
     fP.suptitle('Pressure Benchmarks', fontsize=16)"""
 
+    """
+
+    """
     # Temperature ODE
     # The analytic solution takes q as an input but the numerical solution takes Pressure
     # This means we need pressure values for given q from the pressure ODE first
@@ -355,26 +360,28 @@ def plot_benchmark():
 
     axT = subfigsPT[1].subplots(nrows=1, ncols=3)
 
-    axT[0].plot(t2, T2, "r-", label="analytic")
-    axT[0].plot(t2, T, "bx-", label="numerical")
-
+    axT[0].plot(t2, T2, "b-", label="analytic")
+    axT[0].plot(t2, T, "rx", label="numerical")
+    axT[0].hlines(y=3.0006619445853655, xmin=-1, xmax =11, colors='k', linestyles='--')
     axT[0].legend()
-
+    axT[0].set_xlim(-0.5,10.5)
     # Analytical v Numerical Plot
     axT[0].set_title("Analytic vs Numerical solution")
     axT[0].set_xlabel("Time")
     axT[0].set_ylabel("Temperature")
-
+    
     # Relative Error Plot
-    axT[1].plot(t, error, "g-")
-
+    axT[1].plot(t, error, "r-")
+    axT[1].hlines(y=0, xmin=-1, xmax =11, colors='k', linestyles='--')
     axT[1].set_title("Relative Error, (analytic - numerical) / analytic")
     axT[1].set_xlabel("Time")
     axT[1].set_ylabel("Error")
+    axT[1].set_xlim(-0.5,10.5)
 
     # Convergence Testing Plot
-    axT[2].plot(inv_dt, conv, "k*")
-
+    axT[2].plot(inv_dt, conv, "r*")
+    axT[2].hlines(y=3.0006619445853655, xmin=-1, xmax =11, colors='k', linestyles='--')
+    axT[2].set_xlim(0.9,3)
     axT[2].set_title("Convergence testing")
     axT[2].set_xlabel("1/step size")
     axT[2].set_ylabel("Final value")
