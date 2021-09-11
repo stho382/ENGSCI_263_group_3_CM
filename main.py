@@ -26,10 +26,10 @@ if __name__ == "__main__":
   Future_Productions = [10000, 0, 20000, 5000]
   Future_Time = 2080
   Labels = [
-      "Current Production",
+      "Current production",
       "Cease all production",
       "Double current production",
-      "Half Current Production",
+      "Half current production",
   ]
   plot_model(Future_Productions, Future_Time, Labels, uncertainty = False)
 
