@@ -981,7 +981,6 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
     ax1.set_ylim(0,16)
     ax1.set_xlabel('Porosity')
     ax1.set_ylabel("Probabiltiy Density")
-    plt.show()
 
     # porosity graph calculations
     np.random.seed(314)
@@ -999,7 +998,7 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
     ax1.set_ylim(0,16)
     ax1.set_xlabel('Porosity')
     ax1.set_ylabel("Probabiltiy Density")
-    save_figure = True
+    save_figure = False
     if not save_figure:
         plt.show()
     else:
