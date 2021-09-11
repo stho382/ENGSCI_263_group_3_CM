@@ -963,7 +963,6 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
         axT.set_title("Temperature Model - Predictions")
     axT.set_xlabel("Year")
     axT.set_ylabel("Temperature (Celsius)")
-    #plt.show()
 
     # porosity graph calculations
     np.random.seed(314)
