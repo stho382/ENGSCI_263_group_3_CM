@@ -151,7 +151,7 @@ def ode_temperature_model(t, T, Tc, T0, at, bt, ap, bp, P, P0):
     ------
     None
     """
-    # think this is valid?
+    
     Tt = T
 
     if P > P0:
