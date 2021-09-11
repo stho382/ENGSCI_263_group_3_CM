@@ -6,6 +6,7 @@ from numpy.linalg import norm
 from glob import glob
 import os
 from scipy.optimize import curve_fit
+import pandas as pd
 
 
 def load_ODE_Model_data():
@@ -974,6 +975,24 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
         figP.savefig("Pressure.png")
         plt.close(figP)
 
+    # porosity graph calculations
+    np.random.seed(314)
+    lpm_values_array = np.random.multivariate_normal(p, cov / 10000000, multi_var_samples)
+    porosity_vals = np.zeros(len(lpm_values_array))
+    for i in range(0, len(lpm_values_array)):
+        porosity_vals[i] = porosity_equation(lpm_values_array[i][0], lpm_values_array[i][1], lpm_values_array[i][2], 0.3, 28000000)
+    
+    percentile_95 = np.percentile(porosity_vals, 95)
+    percentile_5 = np.percentile(porosity_vals, 5)
+    f1, ax1 = plt.subplots(nrows=1, ncols=1)
+    plt.hist(porosity_vals, bins = 20, histtype = "stepfilled", color = 'blue', edgecolor = 'blue')
+    ax1.vlines(x=percentile_95, ymin=0, ymax=16, colors='r', linestyles='--')
+    ax1.vlines(x=percentile_5, ymin=0, ymax=16, colors='r', linestyles='--')
+    ax1.set_ylim(0,16)
+    ax1.set_xlabel('Porosity')
+    ax1.set_ylabel("Probabiltiy Density")
+    plt.show()
+    f1.savefig("Porosity.png")
     return tT0, xT0, tP0, xP0
 
 
@@ -1007,6 +1026,36 @@ def plot_misfit(xp, fp, xt, ft):
         plt.show()
     else:
         plt.savefig("misfit.png", dpi=300)
+
+def porosity_equation(a,b,c,S0,A):
+    """Return porosity (phi) for a geothermal field.
+        
+        Parameters:
+    -----------
+    a : float
+            lumped parameter a
+    b : float
+            lumped parameter b
+    c : float
+            lumped parameter c
+    S0 : float
+            vector of time values, for bore hole 2
+    A : float
+            area of geothermal field
+
+    Returns
+    -------
+    phi : float
+            porosity of geothermal field.
+    """
+    g = 9.81                            # acceleration due to gravity
+    a_adjusted = a / 1000               # converting a to SI units
+    b_adjusted = b / (3.154 * 10**7)       # converting b to SI units
+    c_adjusted = c * (3.154 * 10**2)     # converting c to SI units
+
+    # Equation to find porosity
+    phi = (g*(a_adjusted - (b_adjusted * c_adjusted))) / ((1-S0)*A*a_adjusted**2)
+    return phi 
 
 """
 if __name__ == "__main__":
