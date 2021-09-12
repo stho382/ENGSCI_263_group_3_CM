@@ -977,7 +977,7 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
 
     # porosity graph calculations
     np.random.seed(314)
-    lpm_values_array = np.random.multivariate_normal(p, cov / 10000, 10000)
+    lpm_values_array = np.random.multivariate_normal(p, cov / 100, 10000)
     porosity_vals = np.zeros(len(lpm_values_array))
     for i in range(0, len(lpm_values_array)):
         porosity_vals[i] = porosity_equation(
@@ -995,7 +995,7 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
         porosity_vals,
         hist=True,
         kde=True,
-        bins=20,
+        bins=40,
         color="darkblue",
         hist_kws={"edgecolor": "darkblue"},
     )
