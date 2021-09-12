@@ -9,6 +9,7 @@ from scipy.optimize import curve_fit
 import pandas as pd
 import seaborn as sns
 
+
 def load_ODE_Model_data():
     """Returns data from data file for Project 3.
 
@@ -990,19 +991,26 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
     percentile_95 = np.percentile(porosity_vals, 95)
     percentile_5 = np.percentile(porosity_vals, 5)
     f1, ax1 = plt.subplots(nrows=1, ncols=1)
-    sns.distplot(porosity_vals, hist=True, kde=True, bins=20, color = 'darkblue', hist_kws={'edgecolor':'darkblue'})
+    sns.distplot(
+        porosity_vals,
+        hist=True,
+        kde=True,
+        bins=20,
+        color="darkblue",
+        hist_kws={"edgecolor": "darkblue"},
+    )
 
-    #n,b = plt.hist(porosity_vals, bins = 20, histtype = "stepfilled", color = 'blue', edgecolor = 'blue')
-    #n = n / 10000
-    #plt.hist(y=n, x=b)
-    ax1.vlines(x=percentile_95, ymin=0, ymax=200, colors='r', linestyles='--')
-    ax1.vlines(x=percentile_5, ymin=0, ymax=200, colors='r', linestyles='--')
-    ax1.set_ylim(0,180)
-    ax1.set_xlabel('Porosity')
-    ax1.set_ylabel("Probabiltiy Density")
-
+    # n,b = plt.hist(porosity_vals, bins = 20, histtype = "stepfilled", color = 'blue', edgecolor = 'blue')
+    # n = n / 10000
+    # plt.hist(y=n, x=b)
+    ax1.vlines(x=percentile_95, ymin=0, ymax=200, colors="r", linestyles="--")
+    ax1.vlines(x=percentile_5, ymin=0, ymax=200, colors="r", linestyles="--")
+    ax1.set_ylim(0, 180)
+    ax1.set_xlabel("Porosity")
+    ax1.set_ylabel("Frequency")
+    ax1.set_title("Porosity Posterior Distribution")
     save_figure = False
-    
+
     if not save_figure:
         plt.show()
     else:
