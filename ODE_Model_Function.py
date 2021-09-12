@@ -7,7 +7,7 @@ from glob import glob
 import os
 from scipy.optimize import curve_fit
 import pandas as pd
-
+import seaborn as sns
 
 def load_ODE_Model_data():
     """Returns data from data file for Project 3.
@@ -967,7 +967,7 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
 
     # porosity graph calculations
     np.random.seed(314)
-    lpm_values_array = np.random.multivariate_normal(p, cov / 10000000, multi_var_samples)
+    lpm_values_array = np.random.multivariate_normal(p, cov / 10000, 10000)
     porosity_vals = np.zeros(len(lpm_values_array))
     for i in range(0, len(lpm_values_array)):
         porosity_vals[i] = porosity_equation(lpm_values_array[i][0], lpm_values_array[i][1], lpm_values_array[i][2], 0.3, 28000000)
@@ -975,30 +975,19 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
     percentile_95 = np.percentile(porosity_vals, 95)
     percentile_5 = np.percentile(porosity_vals, 5)
     f1, ax1 = plt.subplots(nrows=1, ncols=1)
-    plt.hist(porosity_vals, bins = 20, histtype = "stepfilled", color = 'blue', edgecolor = 'blue')
-    ax1.vlines(x=percentile_95, ymin=0, ymax=16, colors='r', linestyles='--')
-    ax1.vlines(x=percentile_5, ymin=0, ymax=16, colors='r', linestyles='--')
-    ax1.set_ylim(0,16)
+    sns.distplot(porosity_vals, hist=True, kde=True, bins=20, color = 'darkblue', hist_kws={'edgecolor':'darkblue'})
+
+    #n,b = plt.hist(porosity_vals, bins = 20, histtype = "stepfilled", color = 'blue', edgecolor = 'blue')
+    #n = n / 10000
+    #plt.hist(y=n, x=b)
+    ax1.vlines(x=percentile_95, ymin=0, ymax=200, colors='r', linestyles='--')
+    ax1.vlines(x=percentile_5, ymin=0, ymax=200, colors='r', linestyles='--')
+    ax1.set_ylim(0,180)
     ax1.set_xlabel('Porosity')
     ax1.set_ylabel("Probabiltiy Density")
 
-    # porosity graph calculations
-    np.random.seed(314)
-    lpm_values_array = np.random.multivariate_normal(p, cov / 10000000, multi_var_samples)
-    porosity_vals = np.zeros(len(lpm_values_array))
-    for i in range(0, len(lpm_values_array)):
-        porosity_vals[i] = porosity_equation(lpm_values_array[i][0], lpm_values_array[i][1], lpm_values_array[i][2], 0.3, 28000000)
-    
-    percentile_95 = np.percentile(porosity_vals, 95)
-    percentile_5 = np.percentile(porosity_vals, 5)
-    f1, ax1 = plt.subplots(nrows=1, ncols=1)
-    plt.hist(porosity_vals, bins = 20, histtype = "stepfilled", color = 'blue', edgecolor = 'blue')
-    ax1.vlines(x=percentile_95, ymin=0, ymax=16, colors='r', linestyles='--')
-    ax1.vlines(x=percentile_5, ymin=0, ymax=16, colors='r', linestyles='--')
-    ax1.set_ylim(0,16)
-    ax1.set_xlabel('Porosity')
-    ax1.set_ylabel("Probabiltiy Density")
     save_figure = False
+    
     if not save_figure:
         plt.show()
     else:
