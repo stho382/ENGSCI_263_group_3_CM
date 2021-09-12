@@ -155,6 +155,7 @@ def ode_temperature_model(t, T, Tc, T0, at, bt, ap, bp, P, P0):
 
     Tt = T
 
+    # Formula
     if P > P0:
         dTdt = -at * (bp / ap) * (P - P0) * (Tt - T) - bt * (T - T0)
     else:
@@ -370,13 +371,18 @@ def find_dqdt(q, h):
             array of dqdt values
     """
 
+    # make a 0 array length q
     dqdt = 0.0 * q
 
+    # Loop through each position in dqdt and calculate dqdt
     for i in range(len(q)):
+        # If first position use forward step
         if i == 0:
             dqdt[i] = (q[i + 1] - q[i]) / h
+        # If last position use backward step 
         if i == (len(q) - 1):
             dqdt[i] = (q[i] - q[i - 1]) / h
+        # if neither first nor last position, use double step
         if (i > 0) and (i < (len(q) - 1)):
             dqdt[i] = (q[i + 1] - q[i - 1]) / (2 * h)
 
@@ -384,7 +390,28 @@ def find_dqdt(q, h):
 
 
 def fit_pressure_model(t, ap, bp, cp):
+    """
+    Takes the inputs ap, bp and cp along the time array t and uses them to solve the pressure ode
+    This allows us to use the curvefit function to change only parameters ap, bp and cp
 
+    Parameters:
+    -----------
+    t : array-like
+            an array of time values
+    ap : float
+            a lumped paramter for pressure model
+    bp : float
+            a lumped paramter for pressure model
+    cp : float
+            a lumped paramter for pressure model
+
+    Returns:
+    --------
+    p : array-like
+            an array of pressure values at times t for the solved pressure ODE
+    """
+
+    # Takes inputs and passes them into solve_pressure_ode to solve
     (t, p) = solve_pressure_ode(
         ode_pressure_model,
         t[1] - 0.25,
@@ -398,8 +425,32 @@ def fit_pressure_model(t, ap, bp, cp):
 
 
 def fit_pressure_model_P0(t, ap, bp, cp, P00):
+    """
+    Takes the inputs ap, bp, cp and P00 along the time array t and uses them to solve the pressure ode
+    This allows us to use the curvefit function to change only parameters ap, bp and cp
+    This one has P0 as a parameter whereas the earlier function does not
+
+    Parameters:
+    -----------
+    t : array-like
+            an array of time values
+    ap : float
+            a lumped paramter for pressure model
+    bp : float
+            a lumped paramter for pressure model
+    cp : float
+            a lumped paramter for pressure model
+    P00 : float
+            a number representing initial pressure
+
+    Returns:
+    --------
+    p : array-like
+            an array of pressure values at times t for the solved pressure ODE
+    """
     # Like fit pressure model but also takes P0 as a variable rather than as a given
 
+    # Takes inputs and passes them into solve_pressure_ode to solve
     (t, p) = solve_pressure_ode(
         ode_pressure_model,
         t[1] - 0.25,
@@ -413,6 +464,27 @@ def fit_pressure_model_P0(t, ap, bp, cp, P00):
 
 
 def fit_temperature_model(tT, T0, at, bt):
+    """
+    Takes the inputs T0, at and bt along the time array tT and uses them to solve the temperature ode
+    This allows us to use the curvefit function to change only parameters T0, at and bt
+
+    Parameters:
+    -----------
+    tT : array-like
+            an array of time values
+    T0 : float
+            initial temperature
+    at : float
+            a lumped paramter for temperature model
+    bt : float
+            a lumped paramter for temperature model
+    
+
+    Returns:
+    --------
+    pT : array-like
+            an array of Temperature values at times tT for the solved temperature ODE
+    """
     # [Tc, T0, at, bt, ap, bp, P, P0] need to be parsed into ode_temperature model
 
     # given P0
@@ -1016,6 +1088,22 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
 
 
 def plot_misfit(xp, fp, xt, ft):
+    """
+    Takes in x-axis and y-axis values for our pressure and temperature models and calculates the misfit
+    between the data and the model
+
+    Parameters:
+    -----------
+    xp : array-like
+            array of time values for pressure model
+    fp : array-like
+            array of pressure values for pressure model
+    xt : array-like
+            array of time values for temperature model
+    ft : array-like
+            array of temperature values for temperature model
+
+    """
 
     temperature_points = np.interp(YearT, xt, ft)
     temp_error = temperature_points - Temp
