@@ -171,8 +171,8 @@ def solve_pressure_ode(
     x0,
     pars,
     future_prediction="False",
-    benchmark=False,
-):
+    benchmark=False,):
+
     """Solve an ODE numerically.
 
     Parameters:
@@ -574,11 +574,12 @@ def plot_initial_attempt(back_date=False):
     # sigma values created using ad hoc calibration
     sigma = [0.2] * len(press)
 
+    # use curve_fit to fit data points
     p, cov = curve_fit(
         fit_pressure_model_P0, tP, press, sigma=sigma, p0=[0.0015, 0.035, 0.6, 1.6e06]
     )
 
-    # Generate model for past values
+    # Generate data points with calculated parameters
     tP0, xP0 = solve_pressure_ode(
         ode_pressure_model,
         tP[0],
@@ -593,7 +594,10 @@ def plot_initial_attempt(back_date=False):
 
     cov = cov / 5
 
+    # if we want to also generate value for past data
     if back_date == True:
+        # call pressure ode solve starting at earliest data point and stepping 
+        # BACKWARDS with step-size 0.25 until 1950
         yall, xall = solve_pressure_ode(
             ode_pressure_model,
             tP[0],
@@ -637,6 +641,7 @@ def plot_second_attempt(back_date=False):
     # sigma values created using ad hoc calibration
     sigma = [0.2] * len(press)
 
+    # use curve_fit to fit data points
     p, cov = curve_fit(
         fit_pressure_model, tP, press, sigma=sigma, p0=[0.0015, 0.035, 0.6]
     )
@@ -656,7 +661,10 @@ def plot_second_attempt(back_date=False):
 
     cov = cov / 5
 
+    # if we want to also generate value for past data
     if back_date == True:
+        # call pressure ode solve starting at earliest data point and stepping 
+        # BACKWARDS with step-size 0.25 until 1950
         yall, xall = solve_pressure_ode(
             ode_pressure_model,
             tP[0],
