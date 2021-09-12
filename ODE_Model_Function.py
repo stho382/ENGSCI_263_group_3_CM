@@ -705,7 +705,7 @@ def plot_final_model():
     cp = 0.6
     p = [ap, bp, cp]
 
-    # Generate model for past values
+    # Solves ode and generates array of time and pressure values for given parameters
     tP0, xP0 = solve_pressure_ode(
         ode_pressure_model,
         1950,
@@ -724,14 +724,20 @@ def plot_final_model():
     axP.plot(Yearp, Pressure, "ko")
 
     # NOW PLOTTING TEMPERATURE
+    # create time array with step size 1
     tT = np.arange(YearT[0], (YearT[-1] + 1), 1)
+    # interpolate temperature values at times tT
     temperature = np.interp(tT, YearT, Temp)
+    # generate array of sigma values with length of temperature
     sigmaT = [0.3] * len(temperature)
+    # use curvefit to fit parameters to data
     pT, covT = curve_fit(
         fit_temperature_model, tT, temperature, sigma=sigmaT, p0=[200, 5e-10, 0.025]
     )
+    # create plot
     figT, axT = plt.subplots(1, 1)
 
+    # Solves ode and generates array of time and temperature values for given parameters
     tT0, xT0 = solve_temperature_ode(
         ode_temperature_model,
         tT[0],
@@ -749,6 +755,7 @@ def plot_final_model():
             P0,
         ],
     )
+    # plot these values
     axT.plot(tT0, xT0, "r-", label="test")
     axT.set_title("Final Temperature Model")
     axT.set_xlabel("Year")
