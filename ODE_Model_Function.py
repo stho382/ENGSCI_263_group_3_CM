@@ -835,17 +835,22 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
     # Plot know pressures as well
     axP.plot(Yearp, Pressure, "ko")
 
+    # generate 100 samples 
     multi_var_samples = 100
 
+    # if we want uncertainty to be plotted
     if uncertainty == True:
-        # create multivariate for uncertainty
+        # create multivariate for uncertainty with multi_var_samples # of samples
         psP = np.random.multivariate_normal(p, cov, multi_var_samples)
 
+        # preallocate arrays
         tp0 = [0] * multi_var_samples
         xp0 = [0] * multi_var_samples
 
+        # for each sample
         for i in range(multi_var_samples):
             pi = psP[i]
+            # solve with parameters for that sample of parameters
             tp0[i], xp0[i] = solve_pressure_ode(
                 ode_pressure_model,
                 1950,
@@ -854,6 +859,7 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
                 1.6e06,
                 pars=[0, 0, P0, pi[0], pi[1], pi[2]],
             )
+            # plot
             axP.plot(tp0[i], xp0[i], "k-", alpha=0.2, lw=0.5)
 
     # Preallocate arrays
@@ -879,15 +885,24 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
             pars=[0, 0, P0, p[0], p[1], p[2]],
             future_prediction=Future_Productions[i] * 365,
         )
+        # add label
         (HandlesP[i],) = axP.plot(tPset[i], xPset[i], colours[i % 6] + "-")
+        # print which scenario number this is
+        print('Scenario ' + str(i+1))
+        # print the predicted pressure in 2080 for this scenario
+        print(xPset[i][-1]/1e+06)
 
+        # if we want undertainties plotted
         if uncertainty == True:
-            # uncertainty
+            # preallocate array
             tPsetuncert[i] = [0] * multi_var_samples
             xPsetuncert[i] = [0] * multi_var_samples
-
+            uncertainties = [0]*multi_var_samples
+            
+            # loop trhough each sample
             for j in range(multi_var_samples):
                 pi = psP[j]
+                # solve with parameters for that sample
                 tPsetuncert[i][j], xPsetuncert[i][j] = solve_pressure_ode(
                     ode_pressure_model,
                     tP[-1],
@@ -897,6 +912,7 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
                     pars=[0, 0, P0, pi[0], pi[1], pi[2]],
                     future_prediction=Future_Productions[i] * 365,
                 )
+                # plot 
                 axP.plot(
                     tPsetuncert[i][j],
                     xPsetuncert[i][j],
@@ -904,13 +920,21 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
                     alpha=0.2,
                     lw=0.5,
                 )
+                uncertainties[j] = xPsetuncert[i][j][-1]
+            # print the 5th and 95th percentiles for this scenario
+            print('Percentiles')
+            print(np.percentile(uncertainties, 5)/1e+06)
+            print(np.percentile(uncertainties, 95)/1e+06)
 
+    # names of stakeholders
     stakeholder_labels = [
         "ROTORUA CITY COUNCIL",
         "TŪHOURANGI NGĀTI WĀHIAO",
         "LOCAL CHAMBER OF COMMERCE",
     ]
 
+    # loop through each stakeholder and print name on graph in appropriate position
+    # aligning with the scenario that relates to their desired outcome
     for stakeholder_P in range(len(stakeholder_labels)):
         axP.text(
             tPset[stakeholder_P][-1],
@@ -922,6 +946,7 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
             fontweight="bold",
         )
 
+    # label plots
     axP.legend(handles=HandlesP, labels=Labels)
     if uncertainty == True:
         axP.set_title("Pressure Model - Predictions (with uncertainty)")
@@ -930,15 +955,23 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
     axP.set_xlabel("Year")
     axP.set_ylabel("Pressure (Pa)")
 
+
+
     # NOW PLOTTING TEMPERATURE
+    # create time array with step size 1
     tT = np.arange(YearT[0], (YearT[-1] + 1), 1)
+    # interpolate temperature values at times tT
     temperature = np.interp(tT, YearT, Temp)
+    # generate array of sigma values with length of temperature
     sigmaT = [0.35] * len(temperature)
+    # use curvefit to fit parameters to data
     pT, covT = curve_fit(
         fit_temperature_model, tT, temperature, sigma=sigmaT, p0=[200, 5e-10, 0.025]
     )
+    # create plot
     figT, axT = plt.subplots(1, 1)
 
+    # solve ode for given paramters
     tT0, xT0 = solve_temperature_ode(
         ode_temperature_model,
         tT[0],
@@ -957,16 +990,19 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
         ],
     )
 
+    # plot solution
     axT.plot(tT0, xT0, "r-", label="test")
     axT.plot(YearT, Temp, "ko")
 
+    # if we want uncertainties
     if uncertainty == True:
-        # plot uncert
+        # generate sample of multivariates
         psT = np.random.multivariate_normal(pT, covT * 4, multi_var_samples)
 
         tt0 = [0] * multi_var_samples
         xt0 = [0] * multi_var_samples
 
+        # for each sample, solve ode with those parameters and plot it 
         for i in range(multi_var_samples):
             Ti = psT[i]
             tt0[i], xt0[i] = solve_temperature_ode(
@@ -988,13 +1024,17 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
             )
             axT.plot(tt0[i], xt0[i], "k-", alpha=0.2, lw=0.5)
 
+    # preallocate arrays
     tTset = [0] * len(Future_Productions)
     xTset = [0] * len(Future_Productions)
     HandlesT = [0] * len(Future_Productions)
 
+    # generate sample of multivariates
     psT = np.random.multivariate_normal(pT, covT, multi_var_samples)
 
+    # loop through each potential future scenerio
     for i in range(len(Future_Productions)):
+        # solve with the original parameters for this future scenario
         tTset[i], xTset[i] = solve_temperature_ode(
             ode_temperature_model,
             tT[-1],
@@ -1014,9 +1054,16 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
                 P0,
             ],
         )
+        # attach handle (for labeling) to plot of this scenario
         (HandlesT[i],) = axT.plot(tTset[i], xTset[i], colours[i % 6] + "-")
+        # print Temperature in 2080 for this scenario
+        print('Scenario ' + str(i+1))
+        print(xTset[i][-1])
 
+        # if we want uncertainties, loop through each multivariate sample
+        # solve ode with parameters for that sample and plot
         if uncertainty == True:
+            uncertainty_data = [0]*multi_var_samples
             for j in range(multi_var_samples):
                 Ti = psT[j]
                 tTset[i], xTset[i] = solve_temperature_ode(
@@ -1041,7 +1088,14 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
                     ],
                 )
                 axT.plot(tTset[i], xTset[i], colours[i % 6] + "-", alpha=0.2, lw=0.5)
+                uncertainty_data[j] = xTset[i][-1]
+            # print 5th and 95th percentiles for each scenario
+            print('Percentiles')
+            print(np.percentile(uncertainty_data, 5))
+            print(np.percentile(uncertainty_data, 95))
 
+    # loop through each stakeholder and print name on graph in appropriate position
+    # aligning with the scenario that relates to their desired outcome
     for stakeholder_T in range(len(stakeholder_labels)):
         axT.text(
             tTset[stakeholder_T][-1],
