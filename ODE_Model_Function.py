@@ -62,7 +62,7 @@ def load_ODE_Model_data():
     return WaterLevel, Yearp, Prodq1, Yearq1, Prodq2, Yearq2, Temp, YearT
 
 
-#Global Variables established
+# Global Variables established
 WaterLevel, Yearp, Prodq1, Yearq1, Prodq2, Yearq2, Temp, YearT = load_ODE_Model_data()
 # Pressure should be in Pa rather than MPa
 Pressure = (1 + ((WaterLevel - 296.85))) * 1000000
@@ -151,7 +151,7 @@ def ode_temperature_model(t, T, Tc, T0, at, bt, ap, bp, P, P0):
     ------
     None
     """
-    
+
     Tt = T
 
     if P > P0:
@@ -238,12 +238,12 @@ def solve_pressure_ode(
             gradual_change = 40
             if future_prediction > 3650000:
                 for i in range(gradual_change):
-                    dqdt[i] = dqdt[i] + (future_prediction-3650000)/gradual_change
+                    dqdt[i] = dqdt[i] + (future_prediction - 3650000) / gradual_change
             # if a limit is introduced, assume production will quickly be brought down over time
             # to be under limit - past evidence indicates this will take 4 years (ie 12 * 0.25 steps)
             if future_prediction < 3650000:
                 for i in range(12):
-                    dqdt[i] = dqdt[i] + (future_prediction-3650000)/12
+                    dqdt[i] = dqdt[i] + (future_prediction - 3650000) / 12
 
     # loop that iterates improved euler'smethod
     for i in range(nt):
@@ -354,15 +354,15 @@ def interpolate_pressure_values(pv, tv, t):
 
 
 def find_dqdt(q, h):
-    """ Takes an array of q (production) over time and returns the dq/dt array
-    
+    """Takes an array of q (production) over time and returns the dq/dt array
+
     Parameters:
     -----------
     q : array-like
             Array of q values
     h : int
-            time-step size between each q value 
-    
+            time-step size between each q value
+
     Returns:
     --------
     dqdt : array-like
@@ -394,6 +394,7 @@ def fit_pressure_model(t, ap, bp, cp):
     )
 
     return p
+
 
 def fit_pressure_model_P0(t, ap, bp, cp, P00):
     # Like fit pressure model but also takes P0 as a variable rather than as a given
@@ -481,9 +482,10 @@ def interpolate_production_values(t, prod1=Prodq1, t1=Yearq1, prod2=Prodq2, t2=Y
     # prod = p1 + p2
     return p2
 
-def plot_initial_attempt(back_date = False):
+
+def plot_initial_attempt(back_date=False):
     """Plot's our first attempt at a pressure model
-     
+
     Parameters:
     -----------
     back_date : boolean
@@ -496,11 +498,11 @@ def plot_initial_attempt(back_date = False):
     press = np.interp(tP, Yearp, Pressure)
     # create plot
     figP, axP = plt.subplots(1, 1)
-    # sigma values created using ad hoc calibration 
+    # sigma values created using ad hoc calibration
     sigma = [0.2] * len(press)
 
     p, cov = curve_fit(
-        fit_pressure_model_P0, tP, press, sigma=sigma, p0=[0.0015, 0.035, 0.6, 1.6e+06]
+        fit_pressure_model_P0, tP, press, sigma=sigma, p0=[0.0015, 0.035, 0.6, 1.6e06]
     )
 
     # Generate model for past values
@@ -510,12 +512,13 @@ def plot_initial_attempt(back_date = False):
         tP[-1],
         0.25,
         press[0],
-        pars=[0, 0, p[3], p[0], p[1], p[2]])
-    
-    #plot in red
+        pars=[0, 0, p[3], p[0], p[1], p[2]],
+    )
+
+    # plot in red
     axP.plot(tP0, xP0, "r-")
 
-    cov = cov/5
+    cov = cov / 5
 
     if back_date == True:
         yall, xall = solve_pressure_ode(
@@ -524,7 +527,8 @@ def plot_initial_attempt(back_date = False):
             1950,
             -0.25,
             press[0],
-            pars=[0, 0, p[3], p[0], p[1], p[2]])
+            pars=[0, 0, p[3], p[0], p[1], p[2]],
+        )
         axP.plot(yall, xall, "k-")
 
     # Plot know pressures as well
@@ -541,22 +545,23 @@ def plot_initial_attempt(back_date = False):
         figP.savefig("Initial_Pressure_Model.png")
         plt.close(figP)
 
-def plot_second_attempt(back_date = False):
+
+def plot_second_attempt(back_date=False):
     """Plots our second attempt at a pressure model
-     
+
     Parameters:
     -----------
     back_date : boolean
             If backdate is true, we extrapolate pressure data to the past
     """
-    
+
     # creates pressure array
     tP = np.arange(Yearp[0], (Yearp[-1] + 0.25), 0.25)
     # interp pressure values at time array points
     press = np.interp(tP, Yearp, Pressure)
     # create plot
     figP, axP = plt.subplots(1, 1)
-    # sigma values created using ad hoc calibration 
+    # sigma values created using ad hoc calibration
     sigma = [0.2] * len(press)
 
     p, cov = curve_fit(
@@ -570,12 +575,13 @@ def plot_second_attempt(back_date = False):
         tP[-1],
         0.25,
         press[0],
-        pars=[0, 0, P0, p[0], p[1], p[2]])
-    
-    #plot in red
+        pars=[0, 0, P0, p[0], p[1], p[2]],
+    )
+
+    # plot in red
     axP.plot(tP0, xP0, "r-")
 
-    cov = cov/5
+    cov = cov / 5
 
     if back_date == True:
         yall, xall = solve_pressure_ode(
@@ -584,7 +590,8 @@ def plot_second_attempt(back_date = False):
             1950,
             -0.25,
             press[0],
-            pars=[0, 0, P0, p[0], p[1], p[2]])
+            pars=[0, 0, P0, p[0], p[1], p[2]],
+        )
         axP.plot(yall, xall, "k-")
 
     # Plot know pressures as well
@@ -601,9 +608,10 @@ def plot_second_attempt(back_date = False):
         figP.savefig("Second_Pressure_Model.png")
         plt.close(figP)
 
+
 def plot_final_model():
     """Plots our second attempt at a pressure model.
-    Is called in main """
+    Is called in main"""
 
     # creates pressure array
     tP = np.arange(Yearp[0], (Yearp[-1] + 0.25), 0.25)
@@ -639,7 +647,8 @@ def plot_final_model():
     temperature = np.interp(tT, YearT, Temp)
     sigmaT = [0.3] * len(temperature)
     pT, covT = curve_fit(
-        fit_temperature_model, tT, temperature, sigma=sigmaT, p0=[200, 5e-10, 0.025])
+        fit_temperature_model, tT, temperature, sigma=sigmaT, p0=[200, 5e-10, 0.025]
+    )
     figT, axT = plt.subplots(1, 1)
 
     tT0, xT0 = solve_temperature_ode(
@@ -674,7 +683,7 @@ def plot_final_model():
         plt.close(figP)
         figT.savefig("Final_Temperature_Model.png")
         plt.close(figT)
-    
+
 
 def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
     """Plot the model
@@ -707,7 +716,7 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
     press = np.interp(tP, Yearp, Pressure)
     # create plot
     figP, axP = plt.subplots(1, 1)
-    # sigma values created using ad hoc calibration 
+    # sigma values created using ad hoc calibration
     sigma = [0.15] * len(press)
 
     # fit curve
@@ -731,7 +740,7 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
         pars=[0, 0, P0, p[0], p[1], p[2]],
     )
 
-    cov = cov/4
+    cov = cov / 4
 
     # plot in red
     axP.plot(tP0, xP0, "r-")
@@ -831,7 +840,7 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
     else:
         axP.set_title("Pressure Model - Predictions")
     axP.set_xlabel("Year")
-    axP.set_ylabel("Temperature (Celsius)")
+    axP.set_ylabel("Pressure (Pa)")
 
     # NOW PLOTTING TEMPERATURE
     tT = np.arange(YearT[0], (YearT[-1] + 1), 1)
@@ -865,7 +874,7 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
 
     if uncertainty == True:
         # plot uncert
-        psT = np.random.multivariate_normal(pT, covT*4, multi_var_samples)
+        psT = np.random.multivariate_normal(pT, covT * 4, multi_var_samples)
 
         tt0 = [0] * multi_var_samples
         xt0 = [0] * multi_var_samples
@@ -955,8 +964,8 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
             fontsize=7,
             fontweight="bold",
         )
-    axT.hlines(y=147, xmin=1955, xmax =2085, colors='k', linestyles='--')
-    axT.set_xlim(1957.5,2082.5)
+    axT.hlines(y=147, xmin=1955, xmax=2085, colors="k", linestyles="--")
+    axT.set_xlim(1957.5, 2082.5)
     axT.legend(handles=HandlesT, labels=Labels)
     if uncertainty == True:
         axT.set_title("Temperature Model - Predictions (with uncertainty)")
@@ -967,36 +976,56 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
 
     # porosity graph calculations
     np.random.seed(314)
-    lpm_values_array = np.random.multivariate_normal(p, cov / 10000000, multi_var_samples)
+    lpm_values_array = np.random.multivariate_normal(
+        p, cov / 10000000, multi_var_samples
+    )
     porosity_vals = np.zeros(len(lpm_values_array))
     for i in range(0, len(lpm_values_array)):
-        porosity_vals[i] = porosity_equation(lpm_values_array[i][0], lpm_values_array[i][1], lpm_values_array[i][2], 0.3, 28000000)
-    
+        porosity_vals[i] = porosity_equation(
+            lpm_values_array[i][0],
+            lpm_values_array[i][1],
+            lpm_values_array[i][2],
+            0.3,
+            28000000,
+        )
+
     percentile_95 = np.percentile(porosity_vals, 95)
     percentile_5 = np.percentile(porosity_vals, 5)
     f1, ax1 = plt.subplots(nrows=1, ncols=1)
-    plt.hist(porosity_vals, bins = 20, histtype = "stepfilled", color = 'blue', edgecolor = 'blue')
-    ax1.vlines(x=percentile_95, ymin=0, ymax=16, colors='r', linestyles='--')
-    ax1.vlines(x=percentile_5, ymin=0, ymax=16, colors='r', linestyles='--')
-    ax1.set_ylim(0,16)
-    ax1.set_xlabel('Porosity')
+    plt.hist(
+        porosity_vals, bins=20, histtype="stepfilled", color="blue", edgecolor="blue"
+    )
+    ax1.vlines(x=percentile_95, ymin=0, ymax=16, colors="r", linestyles="--")
+    ax1.vlines(x=percentile_5, ymin=0, ymax=16, colors="r", linestyles="--")
+    ax1.set_ylim(0, 16)
+    ax1.set_xlabel("Porosity")
     ax1.set_ylabel("Probabiltiy Density")
 
     # porosity graph calculations
     np.random.seed(314)
-    lpm_values_array = np.random.multivariate_normal(p, cov / 10000000, multi_var_samples)
+    lpm_values_array = np.random.multivariate_normal(
+        p, cov / 10000000, multi_var_samples
+    )
     porosity_vals = np.zeros(len(lpm_values_array))
     for i in range(0, len(lpm_values_array)):
-        porosity_vals[i] = porosity_equation(lpm_values_array[i][0], lpm_values_array[i][1], lpm_values_array[i][2], 0.3, 28000000)
-    
+        porosity_vals[i] = porosity_equation(
+            lpm_values_array[i][0],
+            lpm_values_array[i][1],
+            lpm_values_array[i][2],
+            0.3,
+            28000000,
+        )
+
     percentile_95 = np.percentile(porosity_vals, 95)
     percentile_5 = np.percentile(porosity_vals, 5)
     f1, ax1 = plt.subplots(nrows=1, ncols=1)
-    plt.hist(porosity_vals, bins = 20, histtype = "stepfilled", color = 'blue', edgecolor = 'blue')
-    ax1.vlines(x=percentile_95, ymin=0, ymax=16, colors='r', linestyles='--')
-    ax1.vlines(x=percentile_5, ymin=0, ymax=16, colors='r', linestyles='--')
-    ax1.set_ylim(0,16)
-    ax1.set_xlabel('Porosity')
+    plt.hist(
+        porosity_vals, bins=20, histtype="stepfilled", color="blue", edgecolor="blue"
+    )
+    ax1.vlines(x=percentile_95, ymin=0, ymax=16, colors="r", linestyles="--")
+    ax1.vlines(x=percentile_5, ymin=0, ymax=16, colors="r", linestyles="--")
+    ax1.set_ylim(0, 16)
+    ax1.set_xlabel("Porosity")
     ax1.set_ylabel("Probabiltiy Density")
     save_figure = False
     if not save_figure:
@@ -1017,11 +1046,11 @@ def plot_misfit(xp, fp, xt, ft):
     f1, (ax1, ax2) = plt.subplots(nrows=1, ncols=2)
 
     ax2.plot(YearT, temp_error, "r-", label="error")
-    ax2.hlines(y=0, xmin=1955, xmax =2020, colors='k', linestyles='--')
+    ax2.hlines(y=0, xmin=1955, xmax=2020, colors="k", linestyles="--")
     ax1.plot(Yearp, pressure_error, "r-", label="error")
-    ax2.set_xlim(1957.5,2015)
-    ax1.hlines(y=0, xmin=1955, xmax =2020, colors='k', linestyles='--')
-    ax1.set_xlim(1982.5,2015)
+    ax2.set_xlim(1957.5, 2015)
+    ax1.hlines(y=0, xmin=1955, xmax=2020, colors="k", linestyles="--")
+    ax1.set_xlim(1982.5, 2015)
     ax1.set_title("Pressure misfit")
     ax1.set_xlabel("Time")
     ax1.set_ylabel("Error")
@@ -1040,9 +1069,10 @@ def plot_misfit(xp, fp, xt, ft):
     else:
         plt.savefig("misfit.png", dpi=300)
 
-def porosity_equation(a,b,c,S0,A):
+
+def porosity_equation(a, b, c, S0, A):
     """Return porosity (phi) for a geothermal field.
-        
+
         Parameters:
     -----------
     a : float
@@ -1061,14 +1091,17 @@ def porosity_equation(a,b,c,S0,A):
     phi : float
             porosity of geothermal field.
     """
-    g = 9.81                            # acceleration due to gravity
-    a_adjusted = a / 1000               # converting a to SI units
-    b_adjusted = b / (3.154 * 10**7)       # converting b to SI units
-    c_adjusted = c * (3.154 * 10**2)     # converting c to SI units
+    g = 9.81  # acceleration due to gravity
+    a_adjusted = a / 1000  # converting a to SI units
+    b_adjusted = b / (3.154 * 10 ** 7)  # converting b to SI units
+    c_adjusted = c * (3.154 * 10 ** 2)  # converting c to SI units
 
     # Equation to find porosity
-    phi = (g*(a_adjusted - (b_adjusted * c_adjusted))) / ((1-S0)*A*a_adjusted**2)
-    return phi 
+    phi = (g * (a_adjusted - (b_adjusted * c_adjusted))) / (
+        (1 - S0) * A * a_adjusted ** 2
+    )
+    return phi
+
 
 """
 if __name__ == "__main__":
