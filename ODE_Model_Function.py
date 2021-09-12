@@ -1245,17 +1245,3 @@ def porosity_equation(a, b, c, S0, A):
         (1 - S0) * A * a_adjusted ** 2
     )
     return phi
-
-
-"""
-if __name__ == "__main__":
-    Future_Productions = [10000, 0, 20000, 5000]
-    Future_Time = 2080
-    Labels = [
-        "Current production",
-        "Cease all production",
-        "Double current production",
-        "Half current production",
-    ]
-    tT0, xT0, tP0, xP0 = plot_model(Future_Productions, Future_Time, Labels)
-    plot_misfit(tP0, xP0, tT0, xT0)"""
