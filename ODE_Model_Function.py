@@ -1129,8 +1129,11 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
             28000000,
         )
 
+    # Working out percentile values
     percentile_95 = np.percentile(porosity_vals, 95)
     percentile_5 = np.percentile(porosity_vals, 5)
+    
+    # plotting graph
     f1, ax1 = plt.subplots(nrows=1, ncols=1)
     sns.distplot(
         porosity_vals,
@@ -1140,10 +1143,14 @@ def plot_model(Future_Productions, Future_Time, Labels, uncertainty=True):
         color="darkblue",
         hist_kws={"edgecolor": "darkblue"},
     )
-
+    # adding percentile lines
     ax1.vlines(x=percentile_95, ymin=0, ymax=200, colors="r", linestyles="--")
     ax1.vlines(x=percentile_5, ymin=0, ymax=200, colors="r", linestyles="--")
+    
+    # setting y limits
     ax1.set_ylim(0, 20)
+
+    # Adding labels and titles
     ax1.set_xlabel("Porosity")
     ax1.set_ylabel("Frequency")
     ax1.set_title("Porosity Posterior Distribution")
@@ -1228,8 +1235,8 @@ def porosity_equation(a, b, c, S0, A):
     phi : float
             porosity of geothermal field.
     """
-    g = 9.81  # acceleration due to gravity
-    a_adjusted = a / 1000  # converting a to SI units
+    g = 9.81                            # acceleration due to gravity
+    a_adjusted = a / 1000               # converting a to SI units
     b_adjusted = b / (3.154 * 10 ** 7)  # converting b to SI units
     c_adjusted = c * (3.154 * 10 ** 2)  # converting c to SI units
 
